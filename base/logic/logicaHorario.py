@@ -6,7 +6,7 @@ import copy
 # Datos iniciales
 
 
-def generar_horario(a,f,s,bs,enc,ub,lb,d, schedule_id=None, period_id=None):
+def generar_horario(a,f,s,bs,enc,ub,lb,d,activ, schedule_id=None, period_id=None):
 
     class TabuSearch:
         def __init__(self, init_solution, n, m, h, Q, lbound=None, ubound=None):
@@ -256,6 +256,14 @@ def generar_horario(a,f,s,bs,enc,ub,lb,d, schedule_id=None, period_id=None):
                     return True
             return False
 
+        # NUEVO: Crear diccionario de actividades por asignatura
+        activities_tracker = {}
+        for idx, (asignatura, actividades) in enumerate(zip(asignaturas, activ)):
+            activities_tracker[asignatura] = {
+                'activities': actividades,  # Lista de strings, cada string puede ser '', '1', '1,3', etc.
+                'next_index': 0
+            }
+
         # Recorrer el horario y crear los turnos
         current_date = start_date
         semana_idx = 0
@@ -287,6 +295,24 @@ def generar_horario(a,f,s,bs,enc,ub,lb,d, schedule_id=None, period_id=None):
                     if not subject_id:
                         print(f"No se encontró asignatura con simbología {simbologia}")
                         continue
+
+                    # NUEVO: Obtener la(s) actividad(es) para este turno
+                    subject_activities = activities_tracker[simbologia]
+                    activity_ids = []
+                    if subject_activities['next_index'] < len(subject_activities['activities']):
+                        activity_value = subject_activities['activities'][subject_activities['next_index']]
+                        if activity_value != '':
+                            from base.models import Activity
+                            for symb in activity_value.split(','):
+                                symb = symb.strip()
+                                if symb:
+                                    try:
+                                        act = Activity.objects.get(symbology=symb)
+                                        activity_ids.append(act.id)
+                                    except Activity.DoesNotExist:
+                                        print(f"No se encontró la actividad con simbología {symb}")
+                        subject_activities['next_index'] += 1
+
                     # NUEVO: Obtener el id del profesor principal de la asignatura
                     teacher_id = None
                     subject_obj = id_to_subject.get(subject_id)
@@ -294,13 +320,16 @@ def generar_horario(a,f,s,bs,enc,ub,lb,d, schedule_id=None, period_id=None):
                         teachers_qs = subject_obj.teachers.all()
                         if teachers_qs.exists():
                             teacher_id = teachers_qs.first().id
-                    ClassTime.objects.create(
+                    # Crear el turno y asociar las actividades (ManyToMany)
+                    classtime = ClassTime.objects.create(
                         day=fecha_dia,
                         number=turno_idx + 1,
                         schedule=schedule,
                         subject_id=subject_id,
-                        teacher_id=teacher_id  # NUEVO: guardar el id del profesor
+                        teacher_id=teacher_id
                     )
+                    if activity_ids:
+                        classtime.activities.set(activity_ids)
             semana_idx += 1
         print("Turnos guardados en la base de datos correctamente.")
 

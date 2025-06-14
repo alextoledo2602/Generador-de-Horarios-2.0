@@ -135,8 +135,9 @@ def calculate_balance(request):
         above_list,
         below_list,
         days_not_available_by_week,
-        schedule_id,  # Nuevo argumento
-        period_id     # Nuevo argumento
+        activities_list,
+        schedule_id, 
+        period_id,  
     )
     # Devuelve una respuesta (puede ser lo que tu lógica retorne)
     return Response({"message": "Balance calculado correctamente", "schedule_id": schedule_id})

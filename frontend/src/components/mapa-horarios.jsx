@@ -144,16 +144,14 @@ export function MapaHorarios() {
 
   // Cargar años cuando se selecciona una carrera
   useEffect(() => {
-    if (selectedPath.carrera && selectedPath.curso) {
+    if (selectedPath.carrera) {
       setLoading(true);
       yearsApi
         .getAll()
         .then((res) =>
           setAños(
             res.data.filter(
-              (a) =>
-                a.career === selectedPath.carrera.id &&
-                a.course === selectedPath.curso.id
+              (a) => a.career === selectedPath.carrera.id
             )
           )
         )
@@ -161,7 +159,7 @@ export function MapaHorarios() {
     } else {
       setAños([]);
     }
-  }, [selectedPath.carrera, selectedPath.curso]);
+  }, [selectedPath.carrera]);
 
   // Cargar horarios cuando se selecciona un año
   useEffect(() => {

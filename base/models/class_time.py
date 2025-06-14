@@ -38,12 +38,12 @@ class ClassTime(models.Model):
                                  on_delete=models.CASCADE,
                                  )
 
-    activities = models.ForeignKey("base.Activity",
-                                        verbose_name=_("actividades"),
-                                        on_delete=models.CASCADE,
-                                        blank=True,
-                                        null=True,
-                                        )
+    activities = models.ManyToManyField(
+        "base.Activity",
+        verbose_name=_('actividades'),
+        blank=True,
+        help_text=_('Varias actividades pueden asociarse a un turno, ej: Seminario y Evaluación')
+    )
 
     subject = models.ForeignKey("base.Subject",
                                 verbose_name=_("asignatura"),

@@ -82,6 +82,7 @@ export const class_times = createApiEndpoints("class_times");
 export const schedulesApi = createApiEndpoints("schedules");
 export const load_balancesApi = createApiEndpoints("load_balances");
 export const teachersApi = createApiEndpoints("teachers");
+export const activitysApi = createApiEndpoints("activities");
 export const usersApi = createApiEndpoints("admin/users");
 
 // Endpoint para calcular balance

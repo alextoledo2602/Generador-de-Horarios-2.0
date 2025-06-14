@@ -76,24 +76,21 @@ export default function BasicInfoSection({ data, updateData, onComplete }) {
       .then((response) => {
         const sortedCourses = response.data.sort((a, b) => b.id - a.id);
         setCourses(sortedCourses);
-
       })
       .catch((error) => {
         console.error("Error al obtener cursos:", error);
       });
   }, []);
 
-  // Obtener años filtrados por carrera y curso
+  // Obtener años filtrados por carrera
   useEffect(() => {
-    if (localData.career && localData.courseId) {
+    if (localData.career) {
       yearsApi
         .getAll()
         .then((response) => {
-          // Filtrar los años según la carrera y el curso seleccionados por ID
+          // Filtrar los años según la carrera seleccionada por ID
           const filteredYears = response.data.filter(
-            (year) =>
-              year.career === localData.career &&
-              year.course === localData.courseId
+            (year) => year.career === localData.career
           );
           setYears(filteredYears);
         })
@@ -103,7 +100,7 @@ export default function BasicInfoSection({ data, updateData, onComplete }) {
     } else {
       setYears([]);
     }
-  }, [localData.career, localData.courseId]);
+  }, [localData.career]);
 
   // Obtener periodos filtrados por curso
   useEffect(() => {
@@ -149,7 +146,7 @@ export default function BasicInfoSection({ data, updateData, onComplete }) {
 
   // Actualizar localData cuando cambia data
   useEffect(() => {
-    setLocalData({  ...data });
+    setLocalData({ ...data });
   }, [data]);
 
   const handleChange = (field, value) => {
@@ -189,8 +186,7 @@ export default function BasicInfoSection({ data, updateData, onComplete }) {
         ...localData,
         courseId: selectedCourse.id,
         courseName: selectedCourse.name,
-        year: "", // Reiniciar el año cuando cambia el curso
-        subjects: [], // Reiniciar las materias
+        period: "", // Solo reiniciar el periodo
       };
       setLocalData(newData);
       updateData(newData);
@@ -374,6 +370,43 @@ export default function BasicInfoSection({ data, updateData, onComplete }) {
               </Select>
               {errors.career && (
                 <p className="text-red-500 text-sm">{errors.career}</p>
+              )}            </div>
+
+            {/* Year Selection */}
+            <div className="space-y-2">
+              <Label htmlFor="year" className="text-gray-700 text-lg font-semibold">Año</Label>
+              <Select
+                value={localData.year ? localData.year.toString() : ""}
+                onValueChange={(value) =>
+                  handleChange("year", Number.parseInt(value))
+                }
+                disabled={!localData.career}
+              >
+                <SelectTrigger
+                  id="year"
+                  className={`bg-gray-300 border border-gray-200 shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] h-12 transition-all duration-200 text-base font-medium ${
+                    errors.year ? "border-red-500" : ""
+                  } focus:bg-white focus:border-[#12a6b9] focus:shadow-[0_0_0_2px_rgba(18,166,185,0.1)]`}
+                >
+                  <SelectValue
+                    placeholder={
+                      localData.career
+                        ? "Seleccione año"
+                        : "Seleccione primero la carrera"
+                    }
+                    className="text-base font-medium"
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {years.map((year) => (
+                    <SelectItem key={year.id} value={year.id.toString()} className="text-base font-medium">
+                      {year.number_choice}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.year && (
+                <p className="text-red-500 text-sm">{errors.year}</p>
               )}
             </div>
 
@@ -402,44 +435,6 @@ export default function BasicInfoSection({ data, updateData, onComplete }) {
               </Select>
               {errors.course && (
                 <p className="text-red-500 text-sm">{errors.course}</p>
-              )}
-            </div>
-
-            {/* Year Selection - Only enabled if career and course are selected */}
-            <div className="space-y-2">
-              <Label htmlFor="year" className="text-gray-700 text-lg font-semibold">Año</Label>
-              <Select
-                value={localData.year ? localData.year.toString() : ""}
-                onValueChange={(value) =>
-                  handleChange("year", Number.parseInt(value))
-                }
-                disabled={!localData.career || !localData.courseId}
-              >
-                <SelectTrigger
-                  id="year"
-                  className={`bg-gray-300 border border-gray-200 shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] h-12 transition-all duration-200 text-base font-medium ${
-                    errors.year ? "border-red-500" : ""
-                  } focus:bg-white focus:border-[#12a6b9] focus:shadow-[0_0_0_2px_rgba(18,166,185,0.1)]`}
-                >
-                  <SelectValue
-                    placeholder={
-                      localData.career && localData.courseId
-                        ? "Seleccione año"
-                        : "Seleccione carrera y curso"
-                    }
-                    className="text-base font-medium"
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {years.map((year) => (
-                    <SelectItem key={year.id} value={year.id.toString()} className="text-base font-medium">
-                      {year.number_choice}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.year && (
-                <p className="text-red-500 text-sm">{errors.year}</p>
               )}
             </div>
 

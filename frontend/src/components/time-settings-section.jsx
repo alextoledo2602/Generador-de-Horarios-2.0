@@ -28,7 +28,8 @@ import {
 } from "@/components/ui/table";
 import { ArrowRight, ArrowLeft, ArrowRightCircle } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { activities, defaultTimeSettings } from "@/data/timeSettingsData";
+import { defaultTimeSettings } from "@/data/timeSettingsData";
+import { activitysApi } from "@/api/tasks.api";
 
 // Helper para detectar tamaño de pantalla
 function useBreakpoint() {
@@ -56,6 +57,31 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
   const subjects = data.basicInfo?.subjectObjects || [];
   const weeks = data.basicInfo?.weeks || 14;
   const [currentSubjectIndex, setCurrentSubjectIndex] = useState(0);
+
+  // Estado para actividades
+  const [activities, setActivities] = useState([]);
+  const [loadingActivities, setLoadingActivities] = useState(true);
+
+  // Cargar actividades al montar el componente
+  useEffect(() => {
+    activitysApi
+      .getAll()
+      .then((response) => {
+        // Transformar los datos para mantener la misma estructura que antes
+        const formattedActivities = response.data.map((activity) => ({
+          id: activity.id,
+          name: activity.name,
+          abbreviation: activity.symbology.toString(),
+        }));
+        setActivities(formattedActivities);
+      })
+      .catch((error) => {
+        console.error("Error al cargar actividades:", error);
+      })
+      .finally(() => {
+        setLoadingActivities(false);
+      });
+  }, []);
 
   // Estado para la configuración de cada asignatura
   const [subjectSettings, setSubjectSettings] = useState(() => {
@@ -301,7 +327,7 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
     const activityValues = selectedActivities
       .map((id) => activities.find((a) => a.id === id)?.abbreviation)
       .filter(Boolean)
-      .join("/");
+      .join(","); // Cambiado de '/' a ','
     handleActivityChange(index, activityValues);
   };
 
@@ -339,7 +365,8 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
                 Configuración de Horarios
               </CardTitle>
               <CardDescription className="text-gray-600 text-lg font-medium">
-                Configura los parámetros de tiempo para cada asignatura seleccionada
+                Configura los parámetros de tiempo para cada asignatura
+                seleccionada
               </CardDescription>
             </div>
           </div>
@@ -353,7 +380,9 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div className="space-y-2">
-                <Label className="text-gray-700 text-lg font-semibold">Asignatura</Label>
+                <Label className="text-gray-700 text-lg font-semibold">
+                  Asignatura
+                </Label>
                 <Select
                   value={currentSubject?.id?.toString() || ""}
                   onValueChange={(value) => {
@@ -364,11 +393,18 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
                   }}
                 >
                   <SelectTrigger className="bg-gray-300 border-2 border-gray-300 shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] h-12 text-base font-medium focus:bg-white focus:border-[#12a6b9] focus:shadow-[0_0_0_2px_rgba(18,166,185,0.1)] transition-all duration-200">
-                    <SelectValue placeholder="Selecciona asignatura" className="text-base font-medium" />
+                    <SelectValue
+                      placeholder="Selecciona asignatura"
+                      className="text-base font-medium"
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {subjects.map((subject) => (
-                      <SelectItem key={subject.id} value={subject.id.toString()} className="text-base font-medium">
+                      <SelectItem
+                        key={subject.id}
+                        value={subject.id.toString()}
+                        className="text-base font-medium"
+                      >
                         {subject.name}
                       </SelectItem>
                     ))}
@@ -376,7 +412,9 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label className="text-gray-700 text-lg font-semibold">Simbología</Label>
+                <Label className="text-gray-700 text-lg font-semibold">
+                  Simbología
+                </Label>
                 <Input
                   value={currentSubject?.symbology || ""}
                   readOnly
@@ -384,7 +422,12 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="timeBase" className="text-gray-700 text-lg font-semibold">Fondo de horas</Label>
+                <Label
+                  htmlFor="timeBase"
+                  className="text-gray-700 text-lg font-semibold"
+                >
+                  Fondo de horas
+                </Label>
                 <Input
                   id="timeBase"
                   type="number"
@@ -395,7 +438,11 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
                     handleSettingChange("timeBase", e.target.value)
                   }
                   onWheel={preventWheelChange}
-                  className={`bg-gray-300 border-2 border-gray-300 h-12 text-base font-medium px-4 focus:bg-white focus:border-[#12a6b9] focus:shadow-[0_0_0_2px_rgba(18,166,185,0.1)] transition-all duration-200 ${errors[`${currentSubject?.id}_timeBase`] ? "border-red-500" : ""}`}
+                  className={`bg-gray-300 border-2 border-gray-300 h-12 text-base font-medium px-4 focus:bg-white focus:border-[#12a6b9] focus:shadow-[0_0_0_2px_rgba(18,166,185,0.1)] transition-all duration-200 ${
+                    errors[`${currentSubject?.id}_timeBase`]
+                      ? "border-red-500"
+                      : ""
+                  }`}
                 />
                 {errors[`${currentSubject?.id}_timeBase`] && (
                   <p className="text-red-500 text-sm">
@@ -404,14 +451,20 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="encounters" className="text-gray-700 text-lg font-semibold">Encuentros</Label>
+                <Label
+                  htmlFor="encounters"
+                  className="text-gray-700 text-lg font-semibold"
+                >
+                  Encuentros
+                </Label>
                 <Input
                   id="encounters"
                   type="number"
                   min="0"
                   max="800"
                   value={
-                    currentSettings.encounters === 0 || currentSettings.encounters === undefined
+                    currentSettings.encounters === 0 ||
+                    currentSettings.encounters === undefined
                       ? ""
                       : currentSettings.encounters
                   }
@@ -419,7 +472,11 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
                     handleSettingChange("encounters", e.target.value)
                   }
                   onWheel={preventWheelChange}
-                  className={`bg-gray-300 border-2 border-gray-300 h-12 text-base font-medium px-4 focus:bg-white focus:border-[#12a6b9] focus:shadow-[0_0_0_2px_rgba(18,166,185,0.1)] transition-all duration-200 ${errors[`${currentSubject?.id}_encounters`] ? "border-red-500" : ""}`}
+                  className={`bg-gray-300 border-2 border-gray-300 h-12 text-base font-medium px-4 focus:bg-white focus:border-[#12a6b9] focus:shadow-[0_0_0_2px_rgba(18,166,185,0.1)] transition-all duration-200 ${
+                    errors[`${currentSubject?.id}_encounters`]
+                      ? "border-red-500"
+                      : ""
+                  }`}
                 />
                 {errors[`${currentSubject?.id}_encounters`] && (
                   <p className="text-red-500 text-sm">
@@ -437,7 +494,9 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
               Horas y actividades por encuentro
             </h3>
             <div className="flex justify-between items-center">
-              <Label className="text-gray-700 text-lg font-semibold">Horas y actividades por encuentro</Label>
+              <Label className="text-gray-700 text-lg font-semibold">
+                Horas y actividades por encuentro
+              </Label>
               <div className="flex items-center space-x-2">
                 <Input
                   type="number"
@@ -478,11 +537,16 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
               <Table className="min-w-full">
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-24 text-base font-semibold bg-gray-100">Tipo</TableHead>
+                    <TableHead className="w-24 text-base font-semibold bg-gray-100">
+                      Tipo
+                    </TableHead>
                     {Array.from(
                       { length: currentSettings.encounters || 0 },
                       (_, i) => (
-                        <TableHead key={i} className="text-center min-w-[64px] text-base font-semibold bg-gray-100">
+                        <TableHead
+                          key={i}
+                          className="text-center min-w-[64px] text-base font-semibold bg-gray-100"
+                        >
                           {i + 1}
                         </TableHead>
                       )
@@ -491,7 +555,9 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
                 </TableHeader>
                 <TableBody>
                   <TableRow>
-                    <TableCell className="font-medium text-base bg-white">Horas</TableCell>
+                    <TableCell className="font-medium text-base bg-white">
+                      Horas
+                    </TableCell>
                     {(currentSettings.hoursPerEncounter || [])
                       .slice(0, currentSettings.encounters)
                       .map((hours, index) => (
@@ -525,7 +591,9 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
                       ))}
                   </TableRow>
                   <TableRow>
-                    <TableCell className="font-medium text-base bg-white">Actividades</TableCell>
+                    <TableCell className="font-medium text-base bg-white">
+                      Actividades
+                    </TableCell>
                     {(
                       currentSettings.activitiesPerEncounter ||
                       Array(currentSettings.encounters).fill("")
@@ -556,31 +624,45 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
             {/* Activity Selector */}
             <div className="mt-4 p-4 border rounded-md bg-white/80">
               <Label className="mb-2 block text-gray-700 text-lg font-semibold">
-                Selecciona actividades para aplicar (haz clic en las celdas de input para aplicar)
+                Selecciona actividades para aplicar (haz clic en las celdas de
+                input para aplicar)
               </Label>
-              <div className="flex flex-wrap gap-4 mt-2">
-                {activities.map((activity) => (
-                  <div
-                    key={activity.id}
-                    className="flex items-center space-x-2"
-                  >
-                    <Checkbox
-                      id={`activity-${activity.id}`}
-                      checked={selectedActivities.includes(activity.id)}
-                      onCheckedChange={() => handleActivityToggle(activity.id)}
-                    />
-                    <Label
-                      htmlFor={`activity-${activity.id}`}
-                      className="cursor-pointer text-gray-700 text-base font-medium"
-                    >
-                      {activity.name} ({activity.abbreviation})
-                    </Label>
-                  </div>
-                ))}
-              </div>
               <p className="text-sm text-muted-foreground mt-2">
-                Selecciona actividades arriba y haz clic en las celdas de la fila de Actividades para aplicarlas. Múltiples selecciones se separarán con "/".
+                Selecciona actividades arriba y haz clic en las celdas de la
+                fila de Actividades para aplicarlas. Múltiples selecciones se
+                separarán con ",".
               </p>
+              <div className="flex flex-wrap gap-4 mt-2">
+                {loadingActivities ? (
+                  <p className="text-gray-500">Cargando actividades...</p>
+                ) : activities.length === 0 ? (
+                  <p className="text-red-500">
+                    No hay actividades definidas. Por favor, agrega las
+                    actividades si desea declararlas en los turnos.
+                  </p>
+                ) : (
+                  activities.map((activity) => (
+                    <div
+                      key={activity.id}
+                      className="flex items-center space-x-2"
+                    >
+                      <Checkbox
+                        id={`activity-${activity.id}`}
+                        checked={selectedActivities.includes(activity.id)}
+                        onCheckedChange={() =>
+                          handleActivityToggle(activity.id)
+                        }
+                      />
+                      <Label
+                        htmlFor={`activity-${activity.id}`}
+                        className="cursor-pointer text-gray-700 text-base font-medium"
+                      >
+                        {activity.name} ({activity.abbreviation})
+                      </Label>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           </div>
 
@@ -591,7 +673,11 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
               Distribución semanal
             </h3>
             <div
-              className={breakpoint === "sm" ? "flex flex-col gap-2 mb-2" : "flex justify-end space-x-4 mb-2"}
+              className={
+                breakpoint === "sm"
+                  ? "flex flex-col gap-2 mb-2"
+                  : "flex justify-end space-x-4 mb-2"
+              }
             >
               <div className="flex items-center space-x-2">
                 <Label className="text-base font-medium">Arriba:</Label>
@@ -661,20 +747,24 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
               <Table className="min-w-full">
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="text-base font-semibold bg-gray-100">Planificación</TableHead>
-                    {Array.from(
-                      { length: weeks },
-                      (_, i) => (
-                        <TableHead key={i} className="text-center min-w-[64px] text-base font-semibold bg-gray-100">
-                          S{String(i + 1).padStart(2, "0")}
-                        </TableHead>
-                      )
-                    )}
+                    <TableHead className="text-base font-semibold bg-gray-100">
+                      Planificación
+                    </TableHead>
+                    {Array.from({ length: weeks }, (_, i) => (
+                      <TableHead
+                        key={i}
+                        className="text-center min-w-[64px] text-base font-semibold bg-gray-100"
+                      >
+                        S{String(i + 1).padStart(2, "0")}
+                      </TableHead>
+                    ))}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   <TableRow>
-                    <TableCell className="font-medium text-base bg-white">Arriba</TableCell>
+                    <TableCell className="font-medium text-base bg-white">
+                      Arriba
+                    </TableCell>
                     {(currentSettings.weeklyDistribution?.above || [])
                       .slice(0, weeks)
                       .map((value, index) => (
@@ -704,7 +794,9 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
                       ))}
                   </TableRow>
                   <TableRow>
-                    <TableCell className="font-medium text-base bg-white">Abajo</TableCell>
+                    <TableCell className="font-medium text-base bg-white">
+                      Abajo
+                    </TableCell>
                     {(currentSettings.weeklyDistribution?.below || [])
                       .slice(0, weeks)
                       .map((value, index) => (
@@ -761,7 +853,10 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
       </Card>
 
       <div className="flex justify-end">
-        <Button onClick={handleSubmit} className="bg-[#006599] hover:bg-[#005080] text-white shadow-lg hover:shadow-xl transition-all duration-200 text-base font-semibold">
+        <Button
+          onClick={handleSubmit}
+          className="bg-[#006599] hover:bg-[#005080] text-white shadow-lg hover:shadow-xl transition-all duration-200 text-base font-semibold"
+        >
           Continuar <ArrowRightCircle className="ml-2 h-4 w-4" />
         </Button>
       </div>

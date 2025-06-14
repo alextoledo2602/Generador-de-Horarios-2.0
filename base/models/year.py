@@ -23,14 +23,8 @@ class Year(models.Model):
                                on_delete=models.CASCADE,
                                null=False,
                                blank=False,
-                               )
-    course = models.ForeignKey('base.Course',
-                                verbose_name=_('curso'),
-                                on_delete=models.CASCADE,
-                                null=False,
-                                blank=False,
-                                )
-
+                               )    
+                               
     class Meta:
         verbose_name = _('Año')
         verbose_name_plural = _('Años')
@@ -38,7 +32,7 @@ class Year(models.Model):
         constraints = [
             models.UniqueConstraint(
                 name=_('unique_year'),
-                fields=['number', 'career', 'course'],  # <-- Agrega 'course' aquí
+                fields=['number', 'career'],
             ),
         ]
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { yearsApi, careersApi, coursesApi } from "../api/tasks.api";
+import { yearsApi, careersApi } from "../api/tasks.api";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 
 const YEAR_NUMBERS = [
@@ -15,20 +15,16 @@ export function EditYear() {
   const [number, setNumber] = useState(1);
   const [career, setCareer] = useState("");
   const [careers, setCareers] = useState([]);
-  const [course, setCourse] = useState("");
-  const [courses, setCourses] = useState([]);
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
     careersApi.getAll().then(res => setCareers(res.data));
-    coursesApi.getAll().then(res => setCourses(res.data));
     yearsApi.get(id)
       .then(res => {
         setNumber(res.data.number);
         setCareer(res.data.career);
-        setCourse(res.data.course);
       })
       .catch(() => setError("No se pudo cargar el año."));
   }, [id]);
@@ -40,15 +36,10 @@ export function EditYear() {
       setError("Debe seleccionar una carrera");
       return;
     }
-    if (!course) {
-      setError("Debe seleccionar un curso");
-      return;
-    }
     try {
       await yearsApi.update(id, {
         number,
         career,
-        course,
       });
       if (location.state && location.state.from) {
         navigate(location.state.from);
@@ -98,21 +89,6 @@ export function EditYear() {
             >
               <option value="">Seleccione una carrera</option>
               {careers.map(c => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          </div>
-          <div className="mb-6">
-            <label className="block text-[#006599] font-semibold mb-2 text-lg">
-              Curso
-            </label>
-            <select
-              value={course}
-              onChange={e => setCourse(e.target.value)}
-              className={`w-full bg-gray-300 border-2 ${error && !course ? 'border-red-500' : 'border-gray-300'} rounded-xl px-4 py-3 h-12 text-base font-medium focus:bg-white focus:border-[#12a6b9] focus:shadow-[0_0_0_2px_rgba(18,166,185,0.1)] transition-all duration-200 text-gray-900`}
-            >
-              <option value="">Seleccione un curso</option>
-              {courses.map(c => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </select>
