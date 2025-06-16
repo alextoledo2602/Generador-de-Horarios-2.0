@@ -33,6 +33,17 @@ class Schedule(models.Model):
     
     updated = models.DateTimeField(verbose_name=_('actualizado'), auto_now=True)
 
+    class_room = models.ForeignKey('base.ClassRoom',
+                                   verbose_name=_('aula'),
+                                   on_delete=models.CASCADE,
+                                   )
+
+    group = models.CharField(verbose_name=_('grupo'),
+                             max_length=50,
+                             )
+
+
+
     class Meta:
         verbose_name = _("Horario")
         verbose_name_plural = _("Horarios")

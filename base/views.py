@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework import viewsets
 from .serializer import GenericModelSerializer, RegisterSerializer
-from .models import Task, Activity, Career, Course, Faculty, Period, ClassTime, DayNotAvailable, Teacher, Subject, Schedule, Year, WeekNotAvailable, LoadBalance
+from .models import Task, Activity, Career, Course, Faculty, Period, ClassTime, DayNotAvailable, Teacher, Subject, Schedule, Year, WeekNotAvailable, LoadBalance, ClassRoom
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -35,7 +35,8 @@ MODEL_MAP = {
     'schedules': Schedule,
     'years': Year,
     'weeks_not_available': WeekNotAvailable,
-    'load_balances': LoadBalance, 
+    'load_balances': LoadBalance,
+    'class_rooms': ClassRoom, 
 }
 
 class GenericModelViewSet(viewsets.ModelViewSet):
@@ -83,6 +84,8 @@ def calculate_balance(request):
     career_id = data.get('careerId')  # Nuevo: obtener el id de carrera
     year_id = data.get('yearId')      # Nuevo: obtener el id de año
     subject_ids = data.get('subjectIds', [])  # Nuevo: obtener ids de asignaturas
+    group = data.get('group')
+    class_room_id = data.get('classRoom')
 
     print("Subjects symbology:", subjects_symbology)
     print("Weeks count:", weeks_count)
@@ -95,17 +98,22 @@ def calculate_balance(request):
     print("Period id:", period_id)
 
     # --- NUEVO: Crear objeto Schedule ---
-    from .models import Schedule, Period, Career, Year, Subject
+    from .models import Schedule, Period, Career, Year, Subject, ClassRoom
     schedule = None
     schedule_id = None
     try:
         period = Period.objects.get(pk=period_id)
         career = Career.objects.get(pk=career_id)
         year = Year.objects.get(pk=year_id)
+        class_room = None
+        if class_room_id:
+            class_room = ClassRoom.objects.get(pk=class_room_id)
         schedule = Schedule.objects.create(
             career=career,
             year=year,
-            period=period
+            period=period,
+            group=group,
+            class_room=class_room
         )
         # Asignar las asignaturas seleccionadas
         if subject_ids:

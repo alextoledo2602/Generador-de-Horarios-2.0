@@ -6,8 +6,9 @@ import {
   yearsApi,
   periodsApi,
   subjectsApi,
+  class_roomsApi,
 } from "../api/tasks.api";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Select,
   SelectContent,
@@ -37,7 +38,12 @@ export default function BasicInfoSection({ data, updateData, onComplete }) {
   const [years, setYears] = useState([]);
   const [periods, setPeriods] = useState([]);
   const [subjects, setSubjects] = useState([]);
+  const [classRooms, setClassRooms] = useState([]);
+  const [classRoomSearch, setClassRoomSearch] = useState("");
+  const [showClassRoomDropdown, setShowClassRoomDropdown] = useState(false);
   const [periodLoading, setPeriodLoading] = useState(false);
+  const classRoomSelectorRef = useRef(null);
+
   // Obtener facultades desde el backend
   useEffect(() => {
     facultiesApi
@@ -143,6 +149,25 @@ export default function BasicInfoSection({ data, updateData, onComplete }) {
       setSubjects([]);
     }
   }, [localData.career, localData.year]);
+
+  // Obtener locales (aulas) desde el backend
+  useEffect(() => {
+    class_roomsApi.getAll().then((res) => setClassRooms(res.data));
+  }, []);
+
+  // Cerrar el dropdown si se hace clic fuera
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (
+        classRoomSelectorRef.current &&
+        !classRoomSelectorRef.current.contains(event.target)
+      ) {
+        setShowClassRoomDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Actualizar localData cuando cambia data
   useEffect(() => {
@@ -555,6 +580,77 @@ export default function BasicInfoSection({ data, updateData, onComplete }) {
               )}
             </div>
           )}
+
+          {/* Grupo y Local (Aula) - Ahora dentro del mismo contenedor de grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="group" className="text-gray-700 text-lg font-semibold">Grupo</Label>
+              <Input
+                id="group"
+                type="text"
+                value={localData.group || ""}
+                onChange={(e) => handleChange("group", e.target.value)}
+                placeholder="Ingrese el Grupo."
+                className={`bg-gray-300 border border-gray-200 shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] h-12 transition-all duration-200 text-base font-medium ${
+                  errors.group ? "border-red-500" : ""
+                } focus:bg-white focus:border-[#12a6b9] focus:shadow-[0_0_0_2px_rgba(18,166,185,0.1)]`}
+              />
+              {errors.group && (
+                <p className="text-red-500 text-sm">{errors.group}</p>
+              )}
+            </div>
+
+            <div className="space-y-2" ref={classRoomSelectorRef}>
+              <Label htmlFor="class_room" className="text-gray-700 text-lg font-semibold">Local (Aula)</Label>
+              <div className="relative">
+                <Input
+                  id="class_room"
+                  type="text"
+                  value={classRoomSearch}
+                  onChange={(e) => {
+                    setClassRoomSearch(e.target.value);
+                    setShowClassRoomDropdown(true);
+                  }}
+                  onFocus={() => setShowClassRoomDropdown(true)}
+                  placeholder="Buscar local..."
+                  className={`bg-gray-300 border border-gray-200 shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] h-12 transition-all duration-200 text-base font-medium ${
+                    errors.class_room ? "border-red-500" : ""
+                  } focus:bg-white focus:border-[#12a6b9] focus:shadow-[0_0_0_2px_rgba(18,166,185,0.1)]`}
+                />
+                {showClassRoomDropdown && (
+                  <ul className="absolute z-10 bg-white border w-full max-h-40 overflow-y-auto mt-1 rounded shadow">
+                    {classRooms
+                      .filter((l) =>
+                        l.name.toLowerCase().includes(classRoomSearch.toLowerCase())
+                      )
+                      .map((l) => (
+                        <li
+                          key={l.id}
+                          className="px-3 py-2 hover:bg-blue-100 cursor-pointer"
+                          onClick={() => {
+                            handleChange("class_room", l.id);
+                            setClassRoomSearch(l.name);
+                            setShowClassRoomDropdown(false);
+                          }}
+                        >
+                          {l.name}
+                        </li>
+                      ))}
+                    {classRooms.filter((l) =>
+                      l.name.toLowerCase().includes(classRoomSearch.toLowerCase())
+                    ).length === 0 && (
+                      <li className="px-3 py-2 text-gray-400">No hay locales</li>
+                    )}
+                  </ul>
+                )}
+              </div>
+              {localData.class_room && (
+                <div className="mt-1 text-xs text-gray-600">
+                  Seleccionado: {classRooms.find((l) => l.id === localData.class_room)?.name || ""}
+                </div>
+              )}
+            </div>
+          </div>
         </CardContent>
       </Card>
 

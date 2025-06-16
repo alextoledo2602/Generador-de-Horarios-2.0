@@ -12,6 +12,7 @@ from .schedule import Schedule
 from .year import Year
 from .week_not_available import WeekNotAvailable
 from .load_balance import LoadBalance
+from .class_room import ClassRoom
 __all__ = [
 
     "Task",
@@ -27,7 +28,8 @@ __all__ = [
     "Schedule",
     "Year",
     "WeekNotAvailable",
-    "LoadBalance"
+    "LoadBalance",
+    "ClassRoom"
 
 ]
 

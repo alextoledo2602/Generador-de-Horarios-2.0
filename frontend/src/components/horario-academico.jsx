@@ -32,6 +32,7 @@ import {
   weeks_not_availableApi,
   teachersApi,
   exportarHorarioPdfApi,
+  activitysApi,
 } from "../api/tasks.api";
 import { BalanceCargaTable } from "@/components/load-balance-table";
 import { jwtDecode } from "jwt-decode";
@@ -51,6 +52,7 @@ const TurnoItem = ({
   subjectsMap,
   conflictoProfesor, // NUEVO
   onEdit, // NUEVO: función para editar asignatura/profesor
+  activitiesMap, // NUEVO: mapa id actividad -> simbología
 }) => {
   const elementRef = useRef(null);
   const [touchStarted, setTouchStarted] = useState(false);
@@ -125,6 +127,20 @@ const TurnoItem = ({
     e.preventDefault();
   };
 
+  // Utilidad para obtener la simbología de las actividades asociadas
+  const getActivitiesSymbology = () => {
+    if (!turno.activities || !activitiesMap) return "";
+    // Soporta tanto array de ids como array de objetos
+    let ids = turno.activities;
+    if (Array.isArray(ids) && ids.length > 0 && typeof ids[0] === "object") {
+      ids = ids.map((a) => a.id);
+    }
+    const syms = (ids || [])
+      .map((id) => activitiesMap[id]?.symbology)
+      .filter(Boolean);
+    return syms.length > 0 ? syms.join("/") : "";
+  };
+
   // Si no hay turno, mostrar un cuadro vacío
   if (!turno) {
     if (isEditing) {
@@ -153,11 +169,17 @@ const TurnoItem = ({
     return <div className="h-8"></div>;
   }
 
-  // Mostrar conflicto solo en modo edición
+  // Mostrar turno (visualización y edición)
+  const subjectSymb = subjectsMap[turno.subject]?.symbology || turno.subject;
+  const activitiesSymb = getActivitiesSymbology();
+  const displayText = activitiesSymb
+    ? `${subjectSymb}/${activitiesSymb}`
+    : subjectSymb;
+
   if (!isEditing) {
     return (
       <div className="h-8 flex items-center justify-center border border-gray-200">
-        {subjectsMap[turno.subject]?.symbology || turno.subject}
+        {displayText}
       </div>
     );
   }
@@ -193,7 +215,7 @@ const TurnoItem = ({
       } ${isEditing ? "cursor-move" : ""}`}
       title={conflictoProfesor ? "Conflicto de profesor en este turno" : ""}
     >
-      {subjectsMap[turno.subject]?.symbology || turno.subject}
+      {displayText}
       {conflictoProfesor && (
         <span className="ml-1 text-red-500" title="Conflicto de profesor">
           &#9888;
@@ -224,6 +246,7 @@ export function HorarioAcademico({ scheduleId }) {
   const [careerName, setCareerName] = useState(""); // <-- Nuevo para el nombre de la carrera
   const [yearLabel, setYearLabel] = useState(""); // <-- Nuevo para el año (ej: 1ro, 2do, etc.)
   const [teachersMap, setTeachersMap] = useState({}); // NUEVO: mapa de id -> nombre
+  const [activitiesMap, setActivitiesMap] = useState({}); // NUEVO: mapa id -> simbología
 
   // Obtener el rol del usuario desde el token JWT
   let userRole = null;
@@ -299,6 +322,14 @@ export function HorarioAcademico({ scheduleId }) {
         tmap[t.id] = t.name;
       });
       setTeachersMap(tmap);
+
+      // Obtener las actividades y mapear id -> simbología
+      const { data: activities } = await activitysApi.getAll();
+      const amap = {};
+      activities.forEach((a) => {
+        amap[a.id] = a;
+      });
+      setActivitiesMap(amap);
 
       // Obtener los turnos (class_times)
       const { data: classTimesList } = await class_times.getAll();
@@ -481,18 +512,26 @@ export function HorarioAcademico({ scheduleId }) {
             typeof edit.teacher === "object"
               ? edit.teacher?.id
               : edit.teacher;
-          const origAct =
-            typeof orig.activities === "object"
-              ? orig.activities?.id
-              : orig.activities;
-          const currAct =
-            typeof edit.activities === "object"
-              ? edit.activities?.id
-              : edit.activities;
+          // --- Cambios aquí: comparar arrays de actividades ---
+          const getActs = (acts) => {
+            if (!acts) return [];
+            if (Array.isArray(acts)) {
+              if (acts.length > 0 && typeof acts[0] === "object") {
+                return acts.map((a) => a.id);
+              }
+              return acts;
+            }
+            return [acts];
+          };
+          const origActs = getActs(orig.activities);
+          const currActs = getActs(edit.activities);
+          const actsChanged =
+            origActs.length !== currActs.length ||
+            origActs.some((id, i) => id !== currActs[i]);
           if (
             origSubject !== currSubject ||
             origTeacher !== currTeacher ||
-            origAct !== currAct
+            actsChanged
           ) {
             turnosAActualizar.push(edit);
           }
@@ -513,6 +552,17 @@ export function HorarioAcademico({ scheduleId }) {
       for (const t of turnosAEliminar) {
         await class_times.delete(t.id);
       }
+      // --- Cambios aquí: enviar array de ids de actividades ---
+      const getActsIds = (acts) => {
+        if (!acts) return [];
+        if (Array.isArray(acts)) {
+          if (acts.length > 0 && typeof acts[0] === "object") {
+            return acts.map((a) => a.id);
+          }
+          return acts;
+        }
+        return [acts];
+      };
       for (const t of turnosACrear) {
         await class_times.create({
           day: t.day,
@@ -520,11 +570,7 @@ export function HorarioAcademico({ scheduleId }) {
           schedule: t.schedule,
           subject: typeof t.subject === "object" ? t.subject.id : t.subject,
           teacher: typeof t.teacher === "object" ? t.teacher?.id : t.teacher,
-          activities: t.activities
-            ? typeof t.activities === "object"
-              ? t.activities.id
-              : t.activities
-            : null,
+          activities: getActsIds(t.activities),
         });
       }
       for (const t of turnosAActualizar) {
@@ -534,11 +580,7 @@ export function HorarioAcademico({ scheduleId }) {
           schedule: t.schedule,
           subject: typeof t.subject === "object" ? t.subject.id : t.subject,
           teacher: typeof t.teacher === "object" ? t.teacher?.id : t.teacher,
-          activities: t.activities
-            ? typeof t.activities === "object"
-              ? t.activities.id
-              : t.activities
-            : null,
+          activities: getActsIds(t.activities),
         });
       }
 
@@ -928,6 +970,7 @@ export function HorarioAcademico({ scheduleId }) {
                                   )
                                 );
                               }}
+                              activitiesMap={activitiesMap} // NUEVO
                             />
                           </div>
                         );
@@ -941,58 +984,117 @@ export function HorarioAcademico({ scheduleId }) {
         ))}
       </div>
       {/* Leyenda de asignaturas y profesores SIEMPRE visible */}
-      <div className="mt-8">
-        <h2 className="text-xl font-bold mb-4 text-[#006599]">
-          Asignaturas y Profesores
-        </h2>
-        <div
-          className="flex flex-col gap-1 rounded-lg border border-blue-200 bg-white shadow px-6 py-4 w-fit"
-          style={{
-            minWidth: "260px",
-            maxWidth: "100%",
-          }}
-        >
-          {leyendaAsignaturas.map(({ subject, teacherName }) => (
-            <div
-              key={subject.id}
-              className="flex items-center justify-between py-1"
-              style={{ minWidth: "210px" }}
-            >
-              <div className="flex items-center gap-2">
+      <div className="mt-8 flex flex-col md:flex-row gap-8">
+        {/* Leyenda de asignaturas y profesores */}
+        <div>
+          <h2 className="text-xl font-bold mb-4 text-[#006599]">
+            Asignaturas y Profesores
+          </h2>
+          <div
+            className="flex flex-col gap-1 rounded-lg border border-blue-200 bg-white shadow px-6 py-4 w-fit"
+            style={{
+              minWidth: "260px",
+              maxWidth: "100%",
+            }}
+          >
+            {leyendaAsignaturas.map(({ subject, teacherName }) => (
+              <div
+                key={subject.id}
+                className="flex items-center justify-between py-1"
+                style={{ minWidth: "210px" }}
+              >
+                <div className="flex items-center gap-2">
+                  <span
+                    className="font-mono font-semibold text-blue-700 bg-blue-50 rounded px-2 py-0.5 border border-blue-200 text-center"
+                    style={{
+                      width: "2.7rem",
+                      display: "inline-block",
+                      fontSize: "1.1rem",
+                    }}
+                    title={subject.symbology}
+                  >
+                    {(subject.symbology || subject.name || "")
+                      .toUpperCase()
+                      .slice(0, 3)
+                      .padEnd(3, " ")}
+                  </span>
+                  <span
+                    className="text-gray-800"
+                    style={{ fontSize: "1.08rem" }}
+                  >
+                    {subject.name}
+                  </span>
+                </div>
                 <span
-                  className="font-mono font-semibold text-blue-700 bg-blue-50 rounded px-2 py-0.5 border border-blue-200 text-center"
+                  className="text-blue-900 text-sm font-medium whitespace-nowrap ml-4"
                   style={{
-                    width: "2.7rem",
-                    display: "inline-block",
-                    fontSize: "1.1rem",
+                    fontSize: "1.05rem",
+                    minWidth: "80px",
+                    textAlign: "right",
                   }}
-                  title={subject.symbology}
                 >
-                  {(subject.symbology || subject.name || "")
-                    .toUpperCase()
-                    .slice(0, 3)
-                    .padEnd(3, " ")}
-                </span>
-                <span
-                  className="text-gray-800"
-                  style={{ fontSize: "1.08rem" }}
-                >
-                  {subject.name}
+                  {teacherName}
                 </span>
               </div>
-              <span
-                className="text-blue-900 text-sm font-medium whitespace-nowrap ml-4"
+            ))}
+          </div>
+        </div>
+        {/* Leyenda de actividades usadas en el horario */}
+        {(() => {
+          // Obtener IDs de actividades usadas en los turnos
+          const actividadesUsadasIds = Array.from(
+            new Set(
+              classTimes.flatMap((t) => t.activities || [])
+            )
+          );
+          // Mapear a objetos de actividad
+          const actividadesUsadas = actividadesUsadasIds
+            .map((id) => activitiesMap[id])
+            .filter(Boolean);
+          if (actividadesUsadas.length === 0) return null;
+          return (
+            <div>
+              <h2 className="text-xl font-bold mb-4 text-[#006599]">
+                Actividades
+              </h2>
+              <div
+                className="flex flex-col gap-1 rounded-lg border border-blue-200 bg-white shadow px-6 py-4 w-fit"
                 style={{
-                  fontSize: "1.05rem",
-                  minWidth: "80px",
-                  textAlign: "right",
+                  minWidth: "210px",
+                  maxWidth: "100%",
                 }}
               >
-                {teacherName}
-              </span>
+                {actividadesUsadas.map((actividad) => (
+                  <div
+                    key={actividad.id}
+                    className="flex items-center justify-between py-1"
+                    style={{ minWidth: "180px" }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="font-mono font-semibold text-blue-700 bg-blue-50 rounded px-2 py-0.5 border border-blue-200 text-center"
+                        style={{
+                          width: "2.7rem",
+                          display: "inline-block",
+                          fontSize: "1.1rem",
+                        }}
+                        title={actividad.symbology}
+                      >
+                        {(actividad.symbology || "").toString().toUpperCase().slice(0, 3).padEnd(3, " ")}
+                      </span>
+                      <span
+                        className="text-gray-800"
+                        style={{ fontSize: "1.08rem" }}
+                      >
+                        {actividad.name}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
-        </div>
+          );
+        })()}
       </div>
       {/* El balance de carga solo para usuarios con rol */}
       {hasRole && <BalanceCargaTable scheduleId={scheduleId} />}

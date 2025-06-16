@@ -239,6 +239,8 @@ export default function BalanceSection({ data, updateData, onComplete }) {
       careerId: data.basicInfo?.career || null, // Nuevo: enviar el id de carrera
       yearId: data.basicInfo?.year || null,     // Nuevo: enviar el id de año
       subjectIds: data.basicInfo?.subjects || [], // Nuevo: enviar ids de asignaturas
+      group: data.basicInfo?.group || null, // Enviar grupo
+      classRoom: data.basicInfo?.class_room || null, // Enviar local (aula)
     };
 
     try {

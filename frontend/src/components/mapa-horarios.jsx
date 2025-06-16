@@ -163,17 +163,17 @@ export function MapaHorarios() {
 
   // Cargar horarios cuando se selecciona un año
   useEffect(() => {
-    if (selectedPath.año) {
+    if (selectedPath.año && selectedPath.periodo) {
       setLoading(true);
       schedulesApi
         .getAll()
         .then((res) => {
-          // Filtra por año, carrera y periodo si están seleccionados
+          // Filtra por año, carrera y periodo
           let filtered = res.data.filter(
             (h) =>
               h.year === selectedPath.año.id &&
-              (!selectedPath.carrera || h.career === selectedPath.carrera.id) &&
-              (!selectedPath.periodo || h.period === selectedPath.periodo.id)
+              h.career === selectedPath.carrera.id &&
+              h.period === selectedPath.periodo.id
           );
           setHorarios(filtered);
         })
