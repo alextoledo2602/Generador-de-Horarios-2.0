@@ -7,6 +7,8 @@ import {
   BookOpen,
   Clock,
   LogOut,
+  Building2,
+  ListChecks,
 } from "lucide-react";
 import { useEffect, useRef } from "react";
 import logo from "@/assets/images/logo.png";
@@ -58,6 +60,18 @@ export function Sidebar({ isOpen, onClose }) {
       title: "Profesores",
       href: "/profesores-details",
       icon: Users,
+      show: hasRole,
+    },
+    {
+      title: "Locales",
+      href: "/locales",
+      icon: Building2,
+      show: hasRole,
+    },
+    {
+      title: "Actividades",
+      href: "/actividades",
+      icon: ListChecks,
       show: hasRole,
     },
     // Solo para admin
