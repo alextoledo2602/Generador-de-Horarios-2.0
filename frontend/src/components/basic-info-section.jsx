@@ -286,6 +286,8 @@ export default function BasicInfoSection({ data, updateData, onComplete }) {
     weeks: "Debe indicar un número de semanas válido",
     subjects: "Debe seleccionar al menos una asignatura",
     period: "El período es obligatorio",
+    group: "El grupo es obligatorio",
+    class_room: "El local (aula) es obligatorio",
   };
 
   const validateForm = () => {
@@ -301,6 +303,8 @@ export default function BasicInfoSection({ data, updateData, onComplete }) {
     if (localData.subjects.length === 0)
       newErrors.subjects = errorMessages.subjects;
     if (!localData.period) newErrors.period = errorMessages.period;
+    if (!localData.group || localData.group.trim() === "") newErrors.group = errorMessages.group;
+    if (!localData.class_room) newErrors.class_room = errorMessages.class_room;
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -648,6 +652,9 @@ export default function BasicInfoSection({ data, updateData, onComplete }) {
                 <div className="mt-1 text-xs text-gray-600">
                   Seleccionado: {classRooms.find((l) => l.id === localData.class_room)?.name || ""}
                 </div>
+              )}
+              {errors.class_room && (
+                <p className="text-red-500 text-sm">{errors.class_room}</p>
               )}
             </div>
           </div>

@@ -50,4 +50,4 @@ class Schedule(models.Model):
         ordering = ('period',)
 
     def __str__(self):
-        return f'Horario de {self.career} '
+        return f'Horario de {self.career} {self.group}'

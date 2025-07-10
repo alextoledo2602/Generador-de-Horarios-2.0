@@ -43,4 +43,4 @@ class Career(models.Model):
         return self.CourseType(self.course_type).label
     
     def __str__(self):
-        return f'{self.name} {self.course_type}'
+        return f'{self.name}'

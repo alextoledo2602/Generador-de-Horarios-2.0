@@ -51,6 +51,7 @@ const TurnoItem = ({
   fecha,
   subjectsMap,
   conflictoProfesor, // NUEVO
+  conflictoLaboratorio, // NUEVO
   onEdit, // NUEVO: función para editar asignatura/profesor
   activitiesMap, // NUEVO: mapa id actividad -> simbología
 }) => {
@@ -168,7 +169,7 @@ const TurnoItem = ({
     }
     return <div className="h-8"></div>;
   }
-
+  
   // Mostrar turno (visualización y edición)
   const subjectSymb = subjectsMap[turno.subject]?.symbology || turno.subject;
   const activitiesSymb = getActivitiesSymbology();
@@ -209,15 +210,33 @@ const TurnoItem = ({
       className={`h-8 flex items-center justify-center border ${
         isDragging || touchStarted
           ? "border-blue-500 bg-blue-50"
+          : conflictoProfesor && conflictoLaboratorio
+          ? "border-purple-600 bg-purple-50"
           : conflictoProfesor
           ? "border-red-500 bg-red-50"
+          : conflictoLaboratorio
+          ? "border-orange-500 bg-orange-50"
           : "border-gray-200"
       } ${isEditing ? "cursor-move" : ""}`}
-      title={conflictoProfesor ? "Conflicto de profesor en este turno" : ""}
+      title={
+        [
+          conflictoProfesor ? "Conflicto de profesor en este turno" : null,
+          conflictoLaboratorio ? "Conflicto de laboratorio en este turno" : null,
+        ]
+          .filter(Boolean)
+          .join(" | ")
+      }
     >
       {displayText}
-      {conflictoProfesor && (
-        <span className="ml-1 text-red-500" title="Conflicto de profesor">
+      {(conflictoProfesor || conflictoLaboratorio) && (
+        <span className={`ml-1 ${conflictoProfesor && conflictoLaboratorio ? "text-purple-600" : conflictoProfesor ? "text-red-500" : "text-orange-500"}`} title={
+          [
+            conflictoProfesor ? "Conflicto de profesor en este turno" : null,
+            conflictoLaboratorio ? "Conflicto de laboratorio en este turno" : null,
+          ]
+            .filter(Boolean)
+            .join(" | ")
+        }>
           &#9888;
         </span>
       )}
@@ -705,15 +724,34 @@ export function HorarioAcademico({ scheduleId }) {
     );
   };
 
+  // 1. Buscar el id de la actividad "Laboratorio" (por nombre)
+  const laboratorioActividadId = Object.values(activitiesMap).find(
+    (a) => a && a.name && a.name.toLowerCase() === "laboratorio"
+  )?.id;
+
+  // 2. Detección de conflicto de laboratorio en todos los horarios
+  const tieneConflictoLaboratorio = (turno) => {
+    if (!isEditing || !turno || !turno.activities || !laboratorioActividadId) return false;
+    // ¿Este turno tiene la actividad laboratorio?
+    if (!turno.activities.includes(laboratorioActividadId)) return false;
+    // Buscar en todos los turnos de todos los horarios (allClassTimes)
+    return allClassTimes.some((otro) => {
+      if (!otro || otro.id === turno.id) return false;
+      if (otro.day !== turno.day || otro.number !== turno.number) return false;
+      if (!otro.activities) return false;
+      return otro.activities.includes(laboratorioActividadId);
+    });
+  };
+
   // NUEVO: Construir leyenda de asignaturas con profesor correspondiente en este horario
   const leyendaAsignaturas = (() => {
     // Mapeo subjectId => { subject, teacherId }
     const map = {};
     classTimes.forEach((t) => {
       const subjectId = typeof t.subject === "object" ? t.subject.id : t.subject;
-      // Solo tomar el primer profesor encontrado para esa asignatura en este horario
-      if (!map[subjectId] && t.teacher) {
-        let teacherId = typeof t.teacher === "object" ? t.teacher.id : t.teacher;
+      // Incluir la asignatura aunque no tenga profesor asignado
+      if (!map[subjectId]) {
+        let teacherId = t.teacher ? (typeof t.teacher === "object" ? t.teacher.id : t.teacher) : undefined;
         map[subjectId] = {
           subject: subjectsMap[subjectId],
           teacherId: teacherId,
@@ -936,6 +974,7 @@ export function HorarioAcademico({ scheduleId }) {
                         const isDragging = turno && draggedId === turno.id;
                         // NUEVO: calcular conflicto de profesor
                         const conflictoProfesor = tieneConflictoProfesor(turno);
+                        const conflictoLaboratorio = tieneConflictoLaboratorio(turno);
                         return (
                           <div
                             key={`${week.weekNum}-${dia.nombre}-${posicion}`}
@@ -959,7 +998,8 @@ export function HorarioAcademico({ scheduleId }) {
                               }
                               fecha={fecha}
                               subjectsMap={subjectsMap}
-                              conflictoProfesor={conflictoProfesor} // NUEVO
+                              conflictoProfesor={conflictoProfesor}
+                              conflictoLaboratorio={tieneConflictoLaboratorio(turno)} // NUEVO
                               onEdit={(field, value) => {
                                 // NUEVO: Manejar edición directa de asignatura/profesor
                                 setEditedTurnos((prev) =>

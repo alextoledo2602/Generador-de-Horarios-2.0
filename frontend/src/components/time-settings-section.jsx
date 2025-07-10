@@ -145,10 +145,11 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
   }, [subjects, weeks]);
 
   const [errors, setErrors] = useState({});
+  const [globalError, setGlobalError] = useState("");
   const [autoFillValue, setAutoFillValue] = useState({
     hoursPerEncounter: 2,
-    weeklyDistributionAbove: 2,
-    weeklyDistributionBelow: 4,
+    weeklyDistributionAbove: 6, // Valor por defecto cambiado a 6
+    weeklyDistributionBelow: 0, // Valor por defecto cambiado a 0
   });
   const [selectedActivities, setSelectedActivities] = useState([]);
 
@@ -278,8 +279,21 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
       )
         newErrors[`${subject.id}_hours`] =
           "Las horas por encuentro deben ser mayores a 0";
+      // Validación adicional: suma de valores 'abajo' <= encuentros
+      const sumaAbajo = (settings.weeklyDistribution?.below || []).reduce(
+        (acc, v) => acc + (Number(v) || 0),
+        0
+      );
+      if (sumaAbajo > (settings.encounters || 0)) {
+        newErrors[`${subject.id}_weeklyDistributionBelow`] = `La suma de los valores 'Abajo' (${sumaAbajo}) no puede ser mayor que la cantidad de encuentros (${settings.encounters}) para la asignatura '${subject.name}'.`;
+      }
     });
     setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) {
+      setGlobalError("Ha ocurrido un error en la configuración. Por favor, revisa los campos de todas las asignaturas.");
+    } else {
+      setGlobalError("");
+    }
     return Object.keys(newErrors).length === 0;
   };
 
@@ -500,7 +514,7 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
               <div className="flex items-center space-x-2">
                 <Input
                   type="number"
-                  min="1"
+                  min="0"
                   max="12"
                   value={autoFillValue.hoursPerEncounter}
                   onChange={(e) =>
@@ -565,7 +579,7 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
                           <div className="px-1 py-2 flex justify-center">
                             <Input
                               type="number"
-                              min="1"
+                              min="0"
                               max="12"
                               value={hours}
                               onChange={(e) =>
@@ -672,6 +686,12 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
             <h3 className="text-[#006599] text-xl font-bold mb-2">
               Distribución semanal
             </h3>
+            {/* Mostrar error de suma de abajo aquí */}
+            {errors[`${currentSubject?.id}_weeklyDistributionBelow`] && (
+              <div className="mb-2 p-2 bg-red-100 text-red-700 rounded text-base font-medium">
+                {errors[`${currentSubject?.id}_weeklyDistributionBelow`]}
+              </div>
+            )}
             <div
               className={
                 breakpoint === "sm"
@@ -683,7 +703,7 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
                 <Label className="text-base font-medium">Arriba:</Label>
                 <Input
                   type="number"
-                  min="1"
+                  min="0"
                   max="12"
                   value={autoFillValue.weeklyDistributionAbove}
                   onChange={(e) =>
@@ -710,7 +730,7 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
                 <Label className="text-base font-medium">Abajo:</Label>
                 <Input
                   type="number"
-                  min="1"
+                  min="0"
                   max="12"
                   value={autoFillValue.weeklyDistributionBelow}
                   onChange={(e) =>
@@ -772,7 +792,7 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
                           <div className="px-1 py-2 flex justify-center">
                             <Input
                               type="number"
-                              min="1"
+                              min="0"
                               max="12"
                               value={value}
                               onChange={(e) =>
@@ -804,7 +824,7 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
                           <div className="px-1 py-2 flex justify-center">
                             <Input
                               type="number"
-                              min="1"
+                              min="0"
                               max="12"
                               value={value}
                               onChange={(e) =>
@@ -853,6 +873,11 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
       </Card>
 
       <div className="flex justify-end">
+        {globalError && (
+          <div className="mb-4 w-full text-center p-2 bg-red-100 text-red-700 rounded text-base font-semibold">
+            {globalError}
+          </div>
+        )}
         <Button
           onClick={handleSubmit}
           className="bg-[#006599] hover:bg-[#005080] text-white shadow-lg hover:shadow-xl transition-all duration-200 text-base font-semibold"

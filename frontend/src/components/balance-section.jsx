@@ -271,10 +271,11 @@ export default function BalanceSection({ data, updateData, onComplete }) {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!balanceData.balanceValue || balanceData.balanceValue < 1)
+    if (!balanceData.balanceValue || balanceData.balanceValue < 0)
       newErrors.balanceValue = "Valid balance value is required";
-    if (balanceData.weeklyBalance.some((v) => v < 1))
-      newErrors.weeklyBalance = "Valid values are required for all weeks";
+    // Permitir valor 0 en weeklyBalance, solo marcar error si es negativo o vacío
+    if (balanceData.weeklyBalance.some((v) => v === undefined || v === null || v < 0))
+      newErrors.weeklyBalance = "No se permiten valores negativos o vacíos en las semanas";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -322,7 +323,7 @@ export default function BalanceSection({ data, updateData, onComplete }) {
               <div className="flex items-center space-x-2">
                 <Input
                   type="number"
-                  min="1"
+                  min="0"
                   max="99"
                   value={autoFillValue}
                   onChange={(e) =>
@@ -369,7 +370,7 @@ export default function BalanceSection({ data, updateData, onComplete }) {
                         <div className="px-1 py-2 flex justify-center">
                           <Input
                             type="number"
-                            min="1"
+                            min="0"
                             max="99"
                             value={value}
                             onChange={(e) =>
@@ -404,7 +405,7 @@ export default function BalanceSection({ data, updateData, onComplete }) {
                 <Input
                   id="balanceValue"
                   type="number"
-                  min="1"
+                  min="0"
                   max="99"
                   className={`w-20 h-12 text-base font-medium px-4 border-2 border-gray-300 bg-gray-300 focus:bg-white focus:border-[#12a6b9] focus:shadow-[0_0_0_2px_rgba(18,166,185,0.1)] transition-all duration-200 ${inputNumberNoArrowsClass} ${errors.balanceValue ? "border-red-500" : ""}`}
                   value={balanceData.balanceValue}
@@ -415,14 +416,7 @@ export default function BalanceSection({ data, updateData, onComplete }) {
                   style={inputNumberNoArrows}
                 />
               </div>
-              <Button
-                variant="default"
-                className="bg-[#12a6b9] hover:bg-[#0e8a9c] text-white text-base font-semibold"
-                // Elimina onClick={calculateBalance}
-                // El botón ya no hace nada
-              >
-                Calcular Balance
-              </Button>
+
             </div>
             {errors.balanceValue && (
               <p className="text-red-500 text-sm">{errors.balanceValue}</p>
