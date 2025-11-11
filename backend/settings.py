@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import os
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -19,13 +21,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-e1o*^$0wth5m=7$h4qd+c&agpc_h+ofw3t(bzzv&_d8$#75^&*'
+# Determinar si estamos en producción (Render)
+IS_PRODUCTION = os.environ.get('RENDER', 'False') == 'True'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# SECRET_KEY: usa variable de entorno en producción, local en desarrollo
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-e1o*^$0wth5m=7$h4qd+c&agpc_h+ofw3t(bzzv&_d8$#75^&*')
 
-ALLOWED_HOSTS = []
+# DEBUG: False en producción, True en desarrollo
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+
+# ALLOWED_HOSTS: dominios permitidos para acceder a tu app
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 
 # Application definition
@@ -44,6 +50,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -77,17 +84,28 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'horarios_db',
-        'USER': 'postgres',
-        'PASSWORD': 'Tania150610',
-        'HOST': '127.0.0.1',
-        'DATABASE_PORT': '5432',
-    },
-}
-
+# Database: PostgreSQL en producción y local
+if IS_PRODUCTION:
+    # En Render: usa la DATABASE_URL que nos proporciona
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=os.environ.get('DATABASE_URL'),
+            conn_max_age=600,  # Mantiene conexiones abiertas 10 min
+            conn_health_checks=True,  # Verifica que la conexión esté activa
+        )
+    }
+else:
+    # En local: usa tu PostgreSQL local
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': 'horarios_db',
+            'USER': 'postgres',
+            'PASSWORD': 'Tania150610',
+            'HOST': '127.0.0.1',
+            'DATABASE_PORT': '5432',
+        },
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -124,16 +142,22 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
+# Directorio donde se recopilarán todos los archivos estáticos en producción
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
+# Configuración de WhiteNoise para comprimir y cachear archivos estáticos
+if IS_PRODUCTION:
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-#Cors autorization
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173"
-]
+# CORS: permite peticiones desde estos orígenes
+CORS_ALLOWED_ORIGINS = os.environ.get(
+    'CORS_ALLOWED_ORIGINS',
+    'http://localhost:5173'
+).split(',')
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (

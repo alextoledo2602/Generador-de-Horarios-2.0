@@ -3,12 +3,26 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.so
+*.pyc
 .Python
 env/
 venv/
 ENV/
 .env
+*.env
+
+# Django
 db.sqlite3
+db.sqlite3-journal
+*.log
+staticfiles/
+media/
+.coverage
+
+# Playwright
+.playwright/
+playwright-report/
+test-results/
 
 # Node/React
 node_modules/
@@ -33,3 +47,7 @@ yarn-error.log*
 # Sistema operativo
 .DS_Store
 Thumbs.db
+desktop.ini
+
+# Archivos específicos del proyecto
+wkhtmltopdf.exe
