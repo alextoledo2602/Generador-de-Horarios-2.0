@@ -9,4 +9,6 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // Asegurar que las variables de entorno se carguen correctamente
+  envDir: "./",
 });

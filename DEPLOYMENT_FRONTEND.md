@@ -45,9 +45,21 @@ Este es el directorio donde Vite coloca los archivos compilados
 
 ## PASO 4: Environment Variables (Variables de entorno)
 
-⚠️ **NO necesitas agregar variables de entorno en Render** porque:
-- El archivo `.env.production` ya contiene `VITE_API_URL`
-- Vite usa este archivo automáticamente en el build de producción
+⚠️ **IMPORTANTE**: Debes agregar esta variable de entorno en Render:
+
+Haz clic en **"Advanced"** antes de crear el Static Site, luego agrega:
+
+**Key (Nombre):**
+```
+VITE_API_URL
+```
+
+**Value (Valor):**
+```
+https://generador-de-horarios-backend.onrender.com
+```
+
+Esto asegura que el frontend se conecte al backend correcto en producción
 
 ## PASO 5: Create Static Site
 
