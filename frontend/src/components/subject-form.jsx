@@ -7,6 +7,8 @@ import {
   yearsApi,
   subjectsApi,
 } from "../api/tasks.api";
+import { API_BASE_URL } from "../config";
+
 
 export function SubjectForm() {
   // Estados para los campos del formulario
@@ -55,7 +57,7 @@ export function SubjectForm() {
       });
 
     const token = localStorage.getItem("access");
-    fetch("http://localhost:8000/tasks/api/v1/teachers/", {
+    fetch(`${API_BASE_URL}/tasks/api/v1/teachers/`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     })
       .then((response) => {

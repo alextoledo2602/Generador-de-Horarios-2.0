@@ -7,6 +7,7 @@ import {
   yearsApi,
   subjectsApi,
 } from "../api/tasks.api";
+import { API_BASE_URL } from "../config";
 
 export function EditSubject() {
   const { id } = useParams();
@@ -48,7 +49,7 @@ export function EditSubject() {
   useEffect(() => {
     facultiesApi.getAll().then((response) => setFaculties(response.data));
     const token = localStorage.getItem("access");
-    fetch("http://localhost:8000/tasks/api/v1/teachers/", {
+    fetch(`${API_BASE_URL}/tasks/api/v1/teachers/`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     })
       .then((response) => {
