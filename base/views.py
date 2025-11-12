@@ -86,6 +86,16 @@ def calculate_balance(request):
     subject_ids = data.get('subjectIds', [])  # Nuevo: obtener ids de asignaturas
     group = data.get('group')
     class_room_id = data.get('classRoom')
+    
+    # Validar campos requeridos
+    if not period_id:
+        return Response({"error": "El campo 'periodId' es requerido"}, status=400)
+    if not career_id:
+        return Response({"error": "El campo 'careerId' es requerido"}, status=400)
+    if not year_id:
+        return Response({"error": "El campo 'yearId' es requerido"}, status=400)
+    if not subject_ids or len(subject_ids) == 0:
+        return Response({"error": "Debe seleccionar al menos una asignatura"}, status=400)
 
     print("Subjects symbology:", subjects_symbology)
     print("Weeks count:", weeks_count)
