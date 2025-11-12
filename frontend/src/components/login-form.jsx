@@ -66,6 +66,14 @@ function LoginForm() {
         onSubmit={handleSubmit}
         className="bg-white rounded-xl shadow-xl border-2 border-white p-8 w-full max-w-md"
       >
+        {/* DIAGNÓSTICO TEMPORAL - ELIMINAR DESPUÉS */}
+        <div className="mb-4 p-3 bg-yellow-100 border-2 border-yellow-400 rounded text-xs">
+          <p className="font-bold text-gray-800">🔍 Diagnóstico:</p>
+          <p className="text-gray-700 mt-1">VITE_API_URL: <code className="bg-white px-1">{import.meta.env.VITE_API_URL || 'undefined'}</code></p>
+          <p className="text-gray-700 mt-1">API_BASE_URL: <code className={`px-1 ${API_BASE_URL.includes('localhost') ? 'bg-red-200' : 'bg-green-200'}`}>{API_BASE_URL}</code></p>
+        </div>
+        {/* FIN DIAGNÓSTICO */}
+        
         <h2 className="text-2xl font-bold text-[#006599] mb-6 text-center">
           Iniciar Sesión
         </h2>
