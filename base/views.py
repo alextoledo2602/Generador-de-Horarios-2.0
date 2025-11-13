@@ -530,24 +530,42 @@ def build_schedule_pdf_context(schedule_id, request=None):
 # ---
 # Nueva función: exportar PDF usando Playwright y la misma plantilla HTML
 def exportar_horario_pdf_playwright(request, schedule_id):
+    print(f"===== EXPORTAR PDF: Schedule ID {schedule_id} =====")
     try:
         from playwright.sync_api import sync_playwright  # type: ignore
-    except Exception:
+    except Exception as e:
+        print(f"❌ Error importando Playwright: {str(e)}")
         return HttpResponse(
             "Playwright no está disponible en este entorno. Instálalo con 'pip install playwright' y luego ejecuta 'playwright install'.",
             status=503,
         )
     
     # Construir contexto completo y pasar a la plantilla
-    context = build_schedule_pdf_context(schedule_id, request=request)
+    try:
+        context = build_schedule_pdf_context(schedule_id, request=request)
+        print("✅ Contexto construido exitosamente")
+    except Exception as e:
+        print(f"❌ Error construyendo contexto: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return HttpResponse(f"Error construyendo el contexto: {str(e)}", status=500)
+    
     # Asegurar que 'weeks' existe y tiene 4 semanas con 6x6 celdas
     if not context.get('weeks') or len(context.get('weeks', [])) < 4:
         empty_weeks = []
         for _ in range(4):
             empty_weeks.append({'title': '', 'rows': [['' for _ in range(6)] for _ in range(6)]})
         context['weeks'] = empty_weeks
+    
     template_path = 'plantilla_horario.html'
-    html_string = render_to_string(template_path, context, request=request)
+    try:
+        html_string = render_to_string(template_path, context, request=request)
+        print("✅ HTML renderizado exitosamente")
+    except Exception as e:
+        print(f"❌ Error renderizando template: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return HttpResponse(f"Error renderizando template: {str(e)}", status=500)
 
     # Asegurar resolución correcta de rutas relativas insertando <base href="...">
     base_href = request.build_absolute_uri('/')
@@ -556,41 +574,68 @@ def exportar_horario_pdf_playwright(request, schedule_id):
     else:
         html_string = f'<base href="{base_href}">{html_string}'
 
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        try:
-            page = browser.new_page()
-            page.set_content(html_string, wait_until="networkidle")
-            pdf_bytes = page.pdf(format="A4")
-        finally:
-            browser.close()
+    try:
+        print("🎭 Iniciando Playwright...")
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            try:
+                page = browser.new_page()
+                page.set_content(html_string, wait_until="networkidle")
+                pdf_bytes = page.pdf(format="A4")
+                print("✅ PDF generado exitosamente")
+            finally:
+                browser.close()
+    except Exception as e:
+        print(f"❌ Error con Playwright: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return HttpResponse(f"Error generando PDF con Playwright: {str(e)}", status=500)
 
     response = HttpResponse(pdf_bytes, content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename="horario_playwright.pdf"'
+    print("===== PDF EXPORTADO EXITOSAMENTE =====")
     return response
 
 
 # ---
 # Nueva función: exportar imagen (PNG) usando Playwright y la misma plantilla HTML
 def exportar_horario_imagen_playwright(request, schedule_id):
+    print(f"===== EXPORTAR IMAGEN: Schedule ID {schedule_id} =====")
     try:
         from playwright.sync_api import sync_playwright  # type: ignore
-    except Exception:
+    except Exception as e:
+        print(f"❌ Error importando Playwright: {str(e)}")
         return HttpResponse(
             "Playwright no está disponible en este entorno. Instálalo con 'pip install playwright' y luego ejecuta 'playwright install'.",
             status=503,
         )
 
     # Construir contexto completo y pasar a la plantilla
-    context = build_schedule_pdf_context(schedule_id, request=request)
+    try:
+        context = build_schedule_pdf_context(schedule_id, request=request)
+        print("✅ Contexto construido exitosamente")
+    except Exception as e:
+        print(f"❌ Error construyendo contexto: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return HttpResponse(f"Error construyendo el contexto: {str(e)}", status=500)
+    
     # Asegurar que 'weeks' existe y tiene 4 semanas con 6x6 celdas
     if not context.get('weeks') or len(context.get('weeks', [])) < 4:
         empty_weeks = []
         for _ in range(4):
             empty_weeks.append({'title': '', 'rows': [['' for _ in range(6)] for _ in range(6)]})
         context['weeks'] = empty_weeks
+    
     template_path = 'plantilla_horario.html'
-    html_string = render_to_string(template_path, context, request=request)
+    try:
+        html_string = render_to_string(template_path, context, request=request)
+        print("✅ HTML renderizado exitosamente")
+    except Exception as e:
+        print(f"❌ Error renderizando template: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return HttpResponse(f"Error renderizando template: {str(e)}", status=500)
 
     # Asegurar resolución correcta de rutas relativas insertando <base href="...">
     base_href = request.build_absolute_uri('/')
@@ -604,29 +649,40 @@ def exportar_horario_imagen_playwright(request, schedule_id):
     # usando PyMuPDF (fitz) para obtener alta fidelidad y DPI controlado.
     try:
         import fitz  # PyMuPDF
-    except Exception:
+        print("✅ PyMuPDF importado exitosamente")
+    except Exception as e:
+        print(f"❌ Error importando PyMuPDF: {str(e)}")
         return HttpResponse(
             "Se requiere 'pymupdf' para convertir PDF a imagen. Instálalo con 'pip install pymupdf'.",
             status=503,
         )
 
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        try:
-            page = browser.new_page()
-            # Forzar estilos de impresión para que la plantilla con @page se aplique
+    try:
+        print("🎭 Iniciando Playwright...")
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
             try:
-                page.emulate_media(media="print")
-            except Exception:
-                pass
-            page.set_content(html_string, wait_until="networkidle")
-            # Generar PDF con Playwright (esto preserva exactamente la distribución A4)
-            pdf_bytes = page.pdf(format="A4", print_background=True)
-        finally:
-            browser.close()
+                page = browser.new_page()
+                # Forzar estilos de impresión para que la plantilla con @page se aplique
+                try:
+                    page.emulate_media(media="print")
+                except Exception:
+                    pass
+                page.set_content(html_string, wait_until="networkidle")
+                # Generar PDF con Playwright (esto preserva exactamente la distribución A4)
+                pdf_bytes = page.pdf(format="A4", print_background=True)
+                print("✅ PDF generado exitosamente")
+            finally:
+                browser.close()
+    except Exception as e:
+        print(f"❌ Error con Playwright: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return HttpResponse(f"Error generando PDF con Playwright: {str(e)}", status=500)
 
     # Convertir PDF -> PNG con PyMuPDF
     try:
+        print("🖼️ Convirtiendo PDF a imagen...")
         # Abrir PDF desde bytes
         doc = fitz.open(stream=pdf_bytes, filetype="pdf")
         page0 = doc.load_page(0)
@@ -635,9 +691,14 @@ def exportar_horario_imagen_playwright(request, schedule_id):
         mat = fitz.Matrix(zoom, zoom)
         pix = page0.get_pixmap(matrix=mat, alpha=False)
         png_bytes = pix.tobytes("png")
+        print("✅ Imagen PNG generada exitosamente")
     except Exception as e:
+        print(f"❌ Error convirtiendo PDF a imagen: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return HttpResponse(f"Error al convertir PDF a imagen: {str(e)}", status=500)
 
     response = HttpResponse(png_bytes, content_type='image/png')
     response['Content-Disposition'] = 'attachment; filename="horario_playwright.png"'
+    print("===== IMAGEN EXPORTADA EXITOSAMENTE =====")
     return response
