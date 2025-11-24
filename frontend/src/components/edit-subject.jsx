@@ -100,7 +100,6 @@ export function EditSubject() {
       }
     }
     fetchSubject();
-    // eslint-disable-next-line
   }, [id, teachers.length]);
 
   // Cargar carreras cuando cambia la facultad
