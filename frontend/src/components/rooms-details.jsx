@@ -45,10 +45,10 @@ export function RoomsDetails() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-[#006599]">Locales</h1>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-[#006599]">Locales</h1>
         <Button
-          className="bg-green-600 hover:bg-green-700"
+          className="bg-green-600 hover:bg-green-700 w-full sm:w-auto"
           onClick={() => navigate("/local")}
         >
           <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -65,37 +65,40 @@ export function RoomsDetails() {
         className="mb-8 bg-white text-gray-900"
       />
       {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">{error}</div>}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {filtered.length > 0 ? (
           filtered.map(room => (
-            <Card key={room.id} className="flex flex-row items-center justify-between px-4 py-3 min-h-0 h-auto shadow-sm">
-              <CardContent className="flex flex-row items-center gap-3 p-0">
-                <Building2 className="text-[#006599] w-7 h-7" />
-                <span className="text-[#006599] text-lg font-semibold">{room.name}</span>
+            <Card key={room.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 min-h-0 h-auto shadow-sm">
+              <CardContent className="flex flex-row items-center gap-3 p-0 mb-3 sm:mb-0">
+                <Building2 className="text-[#006599] w-6 h-6 sm:w-7 sm:h-7 flex-shrink-0" />
+                <span className="text-[#006599] text-base sm:text-lg font-semibold break-words">{room.name}</span>
               </CardContent>
-              <CardFooter className="flex flex-row gap-2 p-0">
+              <CardFooter className="flex flex-row gap-2 p-0 w-full sm:w-auto">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => navigate(`/local/${room.id}`)}
+                  className="flex-1 sm:flex-none text-xs sm:text-sm"
                 >
-                  <Edit className="mr-2 h-4 w-4" />
-                  Editar
+                  <Edit className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">Editar</span>
+                  <span className="sm:hidden">Editar</span>
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                  className="flex-1 sm:flex-none text-red-600 hover:bg-red-50 hover:text-red-700 text-xs sm:text-sm"
                   onClick={() => handleDelete(room.id)}
                 >
-                  <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <svg className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M3 6h18"></path>
                     <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
                     <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
                     <line x1="10" y1="11" x2="10" y2="17"></line>
                     <line x1="14" y1="11" x2="14" y2="17"></line>
                   </svg>
-                  Eliminar
+                  <span className="hidden sm:inline">Eliminar</span>
+                  <span className="sm:hidden">Eliminar</span>
                 </Button>
               </CardFooter>
             </Card>

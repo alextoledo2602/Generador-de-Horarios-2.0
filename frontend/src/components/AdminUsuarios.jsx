@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { usersApi } from "@/api/tasks.api";
-import { Edit, Trash2, UserPlus } from "lucide-react";
+import { Edit, Trash2, UserPlus, Eye, EyeOff } from "lucide-react";
 
 const roles = [
 	{ value: "administrador", label: "Administrador" },
@@ -25,6 +25,7 @@ export default function AdminUsuarios() {
 	const [error, setError] = useState("");
 	const [success, setSuccess] = useState("");
 	const [search, setSearch] = useState("");
+	const [showPassword, setShowPassword] = useState(false);
 
 	const fetchUsers = async () => {
 		setLoading(true);
@@ -52,6 +53,7 @@ export default function AdminUsuarios() {
 		setShowDialog(true);
 		setError("");
 		setSuccess("");
+		setShowPassword(false);
 	};
 
 	const handleEdit = (user) => {
@@ -65,6 +67,7 @@ export default function AdminUsuarios() {
 		setShowDialog(true);
 		setError("");
 		setSuccess("");
+		setShowPassword(false);
 	};
 
 	const handleDelete = async (user) => {
@@ -269,15 +272,24 @@ export default function AdminUsuarios() {
 										</span>
 									)}
 								</label>
-								<Input
-									name="password"
-									type="password"
-									value={form.password}
-									onChange={handleChange}
-									className="w-full bg-gray-200 border-2 border-gray-300 rounded-xl px-4 py-3 text-base font-medium focus:bg-white focus:border-[#12a6b9] focus:shadow transition-all duration-200 text-gray-900"
-									required={!editingUser}
-									autoComplete={editingUser ? "new-password" : "new-password"}
-								/>
+								<div className="relative">
+									<Input
+										name="password"
+										type={showPassword ? "text" : "password"}
+										value={form.password}
+										onChange={handleChange}
+										className="w-full bg-gray-200 border-2 border-gray-300 rounded-xl px-4 py-3 pr-12 text-base font-medium focus:bg-white focus:border-[#12a6b9] focus:shadow transition-all duration-200 text-gray-900"
+										required={!editingUser}
+										autoComplete={editingUser ? "new-password" : "new-password"}
+									/>
+									<button
+										type="button"
+										onClick={() => setShowPassword(!showPassword)}
+										className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-[#006599] transition-colors"
+									>
+										{showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+									</button>
+								</div>
 							</div>
 							<div className="flex justify-end gap-2">
 								<Button

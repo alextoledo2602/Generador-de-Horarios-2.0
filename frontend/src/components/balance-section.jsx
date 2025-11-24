@@ -24,7 +24,6 @@ import {
 import { ArrowRightCircle } from "lucide-react";
 import { periodsApi, calculateBalanceApi } from "../api/tasks.api";
 
-// Helper para detectar tamaño de pantalla (igual que en time-settings-section)
 function useBreakpoint() {
   const [breakpoint, setBreakpoint] = useState("lg");
   useEffect(() => {
@@ -42,7 +41,6 @@ function useBreakpoint() {
 
 export default function BalanceSection({ data, updateData, onComplete }) {
   const weeks = data.basicInfo?.weeks || 14;
-  // Usar los objetos completos de las asignaturas seleccionadas
   const subjects = data.basicInfo?.subjectObjects || [];
   const timeSettings = data.timeSettings || {};
 
@@ -57,7 +55,6 @@ export default function BalanceSection({ data, updateData, onComplete }) {
 
   const breakpoint = useBreakpoint();
 
-  // Ocultar flechas en inputs number en sm y md
   const inputNumberNoArrows =
     breakpoint === "sm" || breakpoint === "md"
       ? {
@@ -71,15 +68,12 @@ export default function BalanceSection({ data, updateData, onComplete }) {
       ? "[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
       : "";
 
-  // Handler para evitar scroll accidental en inputs number
   const preventWheelChange = (e) => {
     e.target.blur();
   };
 
-  // NUEVO: Cargar automáticamente los valores máximos de horas por semana al montar el componente
   useEffect(() => {
     async function fetchMaxWeeklyHours() {
-      // Solo si hay datos necesarios
       if (
         !data.basicInfo?.period ||
         !data.basicInfo?.career ||
@@ -90,7 +84,6 @@ export default function BalanceSection({ data, updateData, onComplete }) {
         return;
       }
 
-      // Preparar los datos igual que en calculateBalance
       const formData = {
         subjectsSymbology: subjects.map((subject) => subject.symbology),
         weeksCount: weeks,
@@ -119,16 +112,12 @@ export default function BalanceSection({ data, updateData, onComplete }) {
       };
 
       try {
-        // Usar el cliente API que ya incluye el token
         const periodResp = await periodsApi.get(data.basicInfo.period);
         const daysNotAvailableByWeek = periodResp.data.days_not_available_by_week || [];
-        // Usar la misma lógica que en logicaHorario para calcular los valores máximos
-        // Parámetros fijos según tu lógica
         const opciones_turnos = [1, 2, 3, 4, 5, 6];
         let turnos_por_dia = 3;
         const dias_por_semana = 5;
         const horas_por_turno = 2;
-        // Calcular turnos por asignatura
         const fondo_horas = formData.timeBaseList;
         const turnos_asignaturas = fondo_horas.map((ele) => Math.floor(ele / 2));
         const fondo_Total_asignaturas = turnos_asignaturas.reduce((a, b) => a + b, 0) * 2;
@@ -147,30 +136,25 @@ export default function BalanceSection({ data, updateData, onComplete }) {
           }
         }
         let turnos_por_semana = Array(weeks).fill(turnos_por_dia * dias_por_semana * 2);
-        // Ajustar según días no disponibles
         daysNotAvailableByWeek.forEach((semana_info) => {
           const semana_dic = semana_info.numero_semana;
           if (semana_dic - 1 >= 0 && semana_dic - 1 < turnos_por_semana.length) {
             turnos_por_semana[semana_dic - 1] -= turnos_por_dia * 2;
           }
         });
-        // Actualizar el estado con los valores calculados
         setBalanceData((prev) => ({
           ...prev,
           weeklyBalance: turnos_por_semana,
         }));
         setAutoFillValue(turnos_por_dia * dias_por_semana * 2);
       } catch (error) {
-        // Si falla, dejar los valores por defecto
         console.error("No se pudo precargar los valores máximos de horas por semana:", error);
       }
     }
     fetchMaxWeeklyHours();
-    // eslint-disable-next-line
   }, [data.basicInfo?.period, data.basicInfo?.career, data.basicInfo?.year, data.basicInfo?.subjects, weeks, subjects.length]);
 
   useEffect(() => {
-    // Adjust weekly balance array when weeks change
     setBalanceData((prev) => ({
       ...prev,
       weeklyBalance: adjustArrayLength(
@@ -191,7 +175,6 @@ export default function BalanceSection({ data, updateData, onComplete }) {
   };
 
   const handleWeeklyBalanceChange = (index, value) => {
-    // Limitar a máximo 2 cifras (99)
     if (value > 99) {
       value = 99;
     }
@@ -235,19 +218,17 @@ export default function BalanceSection({ data, updateData, onComplete }) {
         return below;
       }),
       balanceBelowList: balanceData.weeklyBalance,
-      periodId: data.basicInfo?.period || null, // Nuevo: enviar el id de periodo
-      careerId: data.basicInfo?.career || null, // Nuevo: enviar el id de carrera
-      yearId: data.basicInfo?.year || null,     // Nuevo: enviar el id de año
-      subjectIds: data.basicInfo?.subjects || [], // Nuevo: enviar ids de asignaturas
-      group: data.basicInfo?.group || null, // Enviar grupo
-      classRoom: data.basicInfo?.class_room || null, // Enviar local (aula)
+      periodId: data.basicInfo?.period || null,
+      careerId: data.basicInfo?.career || null,
+      yearId: data.basicInfo?.year || null,
+      subjectIds: data.basicInfo?.subjects || [],
+      group: data.basicInfo?.group || null,
+      classRoom: data.basicInfo?.class_room || null,
     };
 
 
     try {
-      // Usar el cliente API que ya incluye el token y refresco
       const response = await calculateBalanceApi(formData);
-      // Redirigir al horario creado si se recibe el schedule_id
       if (response.data && response.data.schedule_id) {
         navigate(`/calendario/${response.data.schedule_id}`);
       } else {
@@ -260,7 +241,6 @@ export default function BalanceSection({ data, updateData, onComplete }) {
       console.error("Response status:", error.response?.status);
       console.error("=========================");
       
-      // Mostrar error específico del backend si está disponible
       const errorMsg = error.response?.data?.error || 
                       JSON.stringify(error.response?.data) || 
                       "Failed to calculate balance.";
@@ -268,7 +248,7 @@ export default function BalanceSection({ data, updateData, onComplete }) {
     }
   };
 
-  // Helper function to adjust array length
+ 
   const adjustArrayLength = (arr, newLength, defaultValue) => {
     if (arr.length < newLength) {
       return [...arr, ...Array(newLength - arr.length).fill(defaultValue)];
@@ -283,7 +263,6 @@ export default function BalanceSection({ data, updateData, onComplete }) {
 
     if (!balanceData.balanceValue || balanceData.balanceValue < 0)
       newErrors.balanceValue = "Valid balance value is required";
-    // Permitir valor 0 en weeklyBalance, solo marcar error si es negativo o vacío
     if (balanceData.weeklyBalance.some((v) => v === undefined || v === null || v < 0))
       newErrors.weeklyBalance = "No se permiten valores negativos o vacíos en las semanas";
 
@@ -408,16 +387,16 @@ export default function BalanceSection({ data, updateData, onComplete }) {
               Control de balance
             </h3>
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center pt-2">
-              <div className="flex items-center gap-2">
-                <Label htmlFor="balanceValue" className="whitespace-nowrap text-gray-700 text-lg font-semibold">
-                  Usar este valor para el balance:
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
+                <Label htmlFor="balanceValue" className="whitespace-nowrap text-gray-700 text-base sm:text-lg font-semibold">
+                  Valor para el balance:
                 </Label>
                 <Input
                   id="balanceValue"
                   type="number"
                   min="0"
                   max="99"
-                  className={`w-20 h-12 text-base font-medium px-4 border-2 border-gray-300 bg-gray-300 focus:bg-white focus:border-[#12a6b9] focus:shadow-[0_0_0_2px_rgba(18,166,185,0.1)] transition-all duration-200 ${inputNumberNoArrowsClass} ${errors.balanceValue ? "border-red-500" : ""}`}
+                  className={`w-full sm:w-20 h-12 text-base font-medium px-4 border-2 border-gray-300 bg-gray-300 focus:bg-white focus:border-[#12a6b9] focus:shadow-[0_0_0_2px_rgba(18,166,185,0.1)] transition-all duration-200 ${inputNumberNoArrowsClass} ${errors.balanceValue ? "border-red-500" : ""}`}
                   value={balanceData.balanceValue}
                   onChange={(e) =>
                     handleChange("balanceValue", Math.min(e.target.value, 99))

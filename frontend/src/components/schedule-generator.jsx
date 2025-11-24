@@ -7,7 +7,7 @@ import BasicInfoSection from "@/components/basic-info-section";
 import TimeSettingsSection from "@/components/time-settings-section";
 import BalanceSection from "@/components/balance-section";
 import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
+import { Check, Info, Clock, Scale } from "lucide-react";
 
 export default function ScheduleGenerator() {
 	const [activeTab, setActiveTab] = useState("basic-info");
@@ -93,16 +93,17 @@ export default function ScheduleGenerator() {
 									activeTab !== "basic-info" &&
 									!completedSections["basic-info"]
 								}
-								className={`flex items-center gap-2 transition-all duration-200 ${
+								className={`flex items-center justify-center gap-1 sm:gap-2 transition-all duration-200 px-2 sm:px-4 text-xs sm:text-sm ${
 									activeTab === "basic-info"
 										? "tab-active"
 										: "tab-inactive"
 								}`}
 							>
 								{completedSections["basic-info"] && (
-									<Check className="h-4 w-4" />
+									<Check className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
 								)}
-								{tabLabels["basic-info"]}
+								<Info className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0 sm:hidden" />
+								<span className="hidden sm:inline">{tabLabels["basic-info"]}</span>
 							</TabsTrigger>
 							<TabsTrigger
 								value="time-settings"
@@ -111,28 +112,30 @@ export default function ScheduleGenerator() {
 									(activeTab !== "time-settings" &&
 										!completedSections["time-settings"])
 								}
-								className={`flex items-center gap-2 transition-all duration-200 ${
+								className={`flex items-center justify-center gap-1 sm:gap-2 transition-all duration-200 px-2 sm:px-4 text-xs sm:text-sm ${
 									activeTab === "time-settings"
 										? "tab-active"
 										: "tab-inactive"
 								}`}
 							>
 								{completedSections["time-settings"] && (
-									<Check className="h-4 w-4" />
+									<Check className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
 								)}
-								{tabLabels["time-settings"]}
+								<Clock className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0 sm:hidden" />
+								<span className="hidden sm:inline">{tabLabels["time-settings"]}</span>
 							</TabsTrigger>
 							<TabsTrigger
 								value="balance"
 								disabled={!completedSections["time-settings"]}
-								className={`flex items-center gap-2 transition-all duration-200 ${
+								className={`flex items-center justify-center gap-1 sm:gap-2 transition-all duration-200 px-2 sm:px-4 text-xs sm:text-sm ${
 									activeTab === "balance"
 										? "tab-active"
 										: "tab-inactive"
 								}`}
 							>
-								{completedSections["balance"] && <Check className="h-4 w-4" />}
-								{tabLabels["balance"]}
+								{completedSections["balance"] && <Check className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />}
+								<Scale className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0 sm:hidden" />
+								<span className="hidden sm:inline">{tabLabels["balance"]}</span>
 							</TabsTrigger>
 						</TabsList>
 

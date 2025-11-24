@@ -1,15 +1,11 @@
-// Datos de ejemplo para el componente de asignaturas universitarias
-
 export const universityData = {
-  // Facultades
   faculties: [
     { id: "fac1", name: "Facultad de Ingeniería" },
     { id: "fac2", name: "Facultad de Ciencias" },
     { id: "fac3", name: "Facultad de Humanidades" },
-    { id: "fac4", name: "Facultad de Medicina" },
+    { id: "fac3", name: "Facultad de Ingeniería" },
   ],
 
-  // Carreras (dependientes de facultades)
   careers: [
     { id: "car1", name: "Ingeniería Civil", facultyId: "fac1" },
     { id: "car2", name: "Ingeniería Informática", facultyId: "fac1" },

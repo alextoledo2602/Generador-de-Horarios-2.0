@@ -40,12 +40,10 @@ class WeekNotAvailable(models.Model):
     
     def clean(self):
         super().clean()
-        # Validar que el motivo no sea vacío
         if not self.reason or not self.reason.strip():
             raise ValidationError({'reason': _('Debe escribir un motivo para la semana no disponible.')})
         if self.start_date and self.end_date and self.start_date > self.end_date:
             raise ValidationError({'end_date': _('La fecha de fin debe ser posterior o igual a la fecha de inicio.')})
-        # Validar que las fechas estén dentro del rango del período
         if self.period and self.start_date:
             if self.start_date < self.period.start:
                 raise ValidationError({'start_date': _('La fecha de inicio debe estar dentro del rango de fechas del período.')})

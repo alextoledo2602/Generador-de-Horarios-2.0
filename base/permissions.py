@@ -1,7 +1,7 @@
-from rest_framework.permissions import BasePermission, SAFE_METHODS
+from rest_framework.permissions import BasePermission
 from django.contrib.auth.models import Group
 
-# Permiso: solo admin (grupo administrador)
+
 class IsAdminUserCustom(BasePermission):
     def has_permission(self, request, view):
         return request.user and request.user.is_authenticated and request.user.groups.filter(name='administrador').exists()

@@ -10,7 +10,6 @@ export const EditPeriod = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // ...mismos estados que PeriodForm...
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
@@ -114,13 +113,11 @@ export const EditPeriod = () => {
 
   useEffect(() => {
     fetchData();
-    // eslint-disable-next-line
   }, [id]);
 
   // Validar que la fecha no sea domingo
   const isSunday = (date) => {
     if (!date) return false;
-    // Domingo es 0 en JS, pero en Django es 1 (lunes=2,...)
     return date.getDay() === 0;
   };
 
@@ -136,7 +133,7 @@ export const EditPeriod = () => {
     setWeekReason("");
   };
 
-  // Validación de formulario (igual que PeriodForm)
+  // Validación de formulario
   const validateForm = () => {
     const errors = {};
     if (!nombrePeriodo) errors.nombrePeriodo = "El nombre del período es obligatorio.";
@@ -157,7 +154,7 @@ export const EditPeriod = () => {
     setSubmitSuccess("");
     if (!validateForm()) return;
     try {
-      // 1. Actualizar periodo
+      // Actualizar periodo
       await periodsApi.update(id, {
         name: nombrePeriodo,
         course: Number(cursoId),
@@ -165,7 +162,7 @@ export const EditPeriod = () => {
         end: formatDateForBackend(endDate),
       });
 
-      // 2. Obtener días y semanas actuales desde la API (estado real en BD)
+      //Obtener días y semanas actuales desde la API
       const [daysRes, weeksRes] = await Promise.all([
         days_not_availableApi.getAll(),
         weeks_not_availableApi.getAll(),
@@ -173,7 +170,7 @@ export const EditPeriod = () => {
       const currentDays = daysRes.data.filter((d) => d.period === Number(id));
       const currentWeeks = weeksRes.data.filter((w) => w.period === Number(id));
 
-      // 3. Eliminar días que están en la BD pero no en el formulario
+      //Eliminar días que están en la BD pero no en el formulario
       for (const dbDay of currentDays) {
         const exists = daysWithoutClasses.some(
           (d) =>
@@ -184,7 +181,7 @@ export const EditPeriod = () => {
           await days_not_availableApi.delete(dbDay.id);
         }
       }
-      // 4. Agregar días nuevos que están en el formulario pero no en la BD
+      //Agregar días nuevos que están en el formulario pero no en la BD
       for (const formDay of daysWithoutClasses) {
         const exists = currentDays.some(
           (d) =>
@@ -200,7 +197,7 @@ export const EditPeriod = () => {
         }
       }
 
-      // 5. Eliminar semanas que están en la BD pero no en el formulario
+      // Eliminar semanas que están en la BD pero no en el formulario
       for (const dbWeek of currentWeeks) {
         const exists = weeksWithoutClasses.some(
           (w) =>
@@ -212,7 +209,7 @@ export const EditPeriod = () => {
           await weeks_not_availableApi.delete(dbWeek.id);
         }
       }
-      // 6. Agregar semanas nuevas que están en el formulario pero no en la BD
+      // Agregar semanas nuevas que están en el formulario pero no en la BD
       for (const formWeek of weeksWithoutClasses) {
         const exists = currentWeeks.some(
           (w) =>
@@ -249,7 +246,6 @@ export const EditPeriod = () => {
     }
   };
 
-  // Handlers para días y semanas (igual que en PeriodForm)
   // Al agregar un día, motivo es obligatorio y fechas deben estar dentro del rango
   const handleAddDayWithoutClasses = () => {
     setDayReasonError("");
@@ -344,7 +340,6 @@ export const EditPeriod = () => {
     });
   };
 
-  // Custom DatePicker input
   const CustomDatePickerInput = React.forwardRef(
     ({ value, onClick, placeholder }, ref) => (
       <div className="relative w-full">

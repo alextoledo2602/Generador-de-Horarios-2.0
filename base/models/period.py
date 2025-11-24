@@ -74,7 +74,6 @@ class Period(models.Model):
         return self.start_week(number) + datetime.timedelta(days=5)
 
     def clean(self) -> None:
-        # Validar que el período pertenezca a un curso
         if not self.course:
             raise ValidationError({'course': 'El período tiene que pertenecer a un curso'})
 
@@ -82,7 +81,6 @@ class Period(models.Model):
         start_year = int(course_years[0])
         end_year = int(course_years[1])
 
-        # Validar que las fechas estén dentro de alguno de los años del curso
         start_year_valid = self.start.year == start_year or self.start.year == end_year
         end_year_valid = self.end.year == start_year or self.end.year == end_year
 
@@ -94,7 +92,6 @@ class Period(models.Model):
             raise ValidationError({'end': 
                 f"La fecha de fin del período debe estar dentro de los años {start_year} o {end_year}"})
 
-        # NO permitir inicio igual o mayor que fin (debe ser estrictamente menor, no igual)
         if self.start >= self.end:
             raise ValidationError({'start': 'La fecha de inicio debe ser anterior a la fecha de fin.'})
 
@@ -111,9 +108,8 @@ class Period(models.Model):
         Calcula la cantidad de semanas del período, considerando desde el lunes anterior a la fecha de inicio
         hasta el domingo posterior a la fecha de fin, y restando las semanas completas no disponibles.
         """
-        # Usar los métodos existentes que ya calculan correctamente el lunes y domingo
-        start_monday = self.get_start()  # Ya devuelve el lunes anterior o igual
-        end_sunday = self.get_end()      # Ya devuelve el domingo posterior o igual
+        start_monday = self.get_start()
+        end_sunday = self.get_end()
         
         # Total de semanas en el rango (usando la misma lógica que number_of_weeks)
         total_weeks = ceil(((end_sunday - start_monday).days + 2) / 7)
@@ -121,16 +117,12 @@ class Period(models.Model):
         # Importar aquí para evitar import circular
         from .week_not_available import WeekNotAvailable
         
-        # Obtener las semanas no disponibles asociadas a este periodo
         unavailable_weeks = WeekNotAvailable.objects.filter(period=self)
         
-        # Calcular semanas a restar
         weeks_to_subtract = 0
         for unavailable_week in unavailable_weeks:
-            # Calcular días en el rango no disponible
             days_unavailable = (unavailable_week.end_date - unavailable_week.start_date).days + 1
             
-            # Como mencionas que siempre serán múltiplos de 7 (7, 14, 21), dividimos entre 7
             weeks_to_subtract += days_unavailable // 7
         
         return total_weeks - weeks_to_subtract
@@ -144,34 +136,27 @@ class Period(models.Model):
         }
         para cada DayNotAvailable asociado al período.
         """
-        from .day_not_available import DayNotAvailable
         from .week_not_available import WeekNotAvailable
+        from .day_not_available import DayNotAvailable
 
-        # Fecha de inicio del período ajustada al lunes
         start_date = self.get_start()
         
-        # Obtener las semanas no disponibles ordenadas por fecha de inicio
         unavailable_weeks = WeekNotAvailable.objects.filter(period=self).order_by('start_date')
         
-        # Obtener los días no disponibles
         days_not_available = DayNotAvailable.objects.filter(period=self)
         
         result = []
         for day in days_not_available:
             day_date = day.day
             
-            # Calcular a qué semana pertenece este día (contando desde el inicio)
             days_since_start = (day_date - start_date).days
-            absolute_week = days_since_start // 7 + 1  # Número de semana sin considerar semanas no disponibles
+            absolute_week = days_since_start // 7 + 1
             
-            # Calcular cuántas semanas no disponibles hay antes de este día
             weeks_to_subtract = 0
             for unavailable_week in unavailable_weeks:
-                # Si la semana no disponible termina antes del día actual, restar una semana
                 if unavailable_week.end_date < day_date:
                     weeks_to_subtract += 1
             
-            # Calcular el número de semana ajustado (restando las semanas no disponibles)
             adjusted_week = absolute_week - weeks_to_subtract
             
             result.append({

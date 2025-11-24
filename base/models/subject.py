@@ -51,7 +51,6 @@ class Subject(models.Model):
         ]
 
     def clean(self):
-        # Validar que el año pertenece a la carrera seleccionada
         if self.year.career != self.career:
             raise ValidationError({
                 'year': _('El año seleccionado no pertenece a la carrera especificada.')

@@ -31,7 +31,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { defaultTimeSettings } from "@/data/timeSettingsData";
 import { activitysApi } from "@/api/tasks.api";
 
-// Helper para detectar tamaño de pantalla
 function useBreakpoint() {
   const [breakpoint, setBreakpoint] = useState("lg");
   useEffect(() => {
@@ -47,27 +46,22 @@ function useBreakpoint() {
   return breakpoint;
 }
 
-// Handler para evitar scroll accidental en inputs number
 const preventWheelChange = (e) => {
   e.target.blur();
 };
 
 export default function TimeSettingsSection({ data, updateData, onComplete }) {
-  // Usar los objetos completos de las asignaturas seleccionadas
   const subjects = data.basicInfo?.subjectObjects || [];
   const weeks = data.basicInfo?.weeks || 14;
   const [currentSubjectIndex, setCurrentSubjectIndex] = useState(0);
 
-  // Estado para actividades
   const [activities, setActivities] = useState([]);
   const [loadingActivities, setLoadingActivities] = useState(true);
 
-  // Cargar actividades al montar el componente
   useEffect(() => {
     activitysApi
       .getAll()
       .then((response) => {
-        // Transformar los datos para mantener la misma estructura que antes
         const formattedActivities = response.data.map((activity) => ({
           id: activity.id,
           name: activity.name,
@@ -134,7 +128,6 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
           }
         }
       });
-      // Eliminar settings de asignaturas que ya no están seleccionadas
       Object.keys(newSettings).forEach((id) => {
         if (!subjects.find((s) => s.id === Number(id))) {
           delete newSettings[id];
@@ -153,7 +146,6 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
   });
   const [selectedActivities, setSelectedActivities] = useState([]);
 
-  // Asignatura y configuración actual
   const currentSubject = subjects[currentSubjectIndex];
   const currentSettings = currentSubject
     ? subjectSettings[currentSubject.id] || {
@@ -167,7 +159,6 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
 
   const breakpoint = useBreakpoint();
 
-  // Helper para ocultar flechas en inputs number en móvil y md
   const inputNumberNoArrows =
     breakpoint === "sm" || breakpoint === "md"
       ? {
@@ -202,7 +193,6 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
       },
     };
 
-    // Si cambia encounters, ajustar arrays dependientes
     if (field === "encounters") {
       const newEncounters = Number.parseInt(val) || 0;
       newSettings[currentSubject.id].hoursPerEncounter = adjustArrayLength(
@@ -379,7 +369,7 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
                 Configuración de Horarios
               </CardTitle>
               <CardDescription className="text-gray-600 text-lg font-medium">
-                Configura los parámetros de tiempo para cada asignatura
+                Configura los parámetros requeridos para cada asignatura
                 seleccionada
               </CardDescription>
             </div>
@@ -507,11 +497,11 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
             <h3 className="text-[#006599] text-xl font-bold mb-2">
               Horas y actividades por encuentro
             </h3>
-            <div className="flex justify-between items-center">
-              <Label className="text-gray-700 text-lg font-semibold">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
+              <Label className="text-gray-700 text-base sm:text-lg font-semibold">
                 Horas y actividades por encuentro
               </Label>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 w-full sm:w-auto">
                 <Input
                   type="number"
                   min="0"
@@ -532,7 +522,7 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
                 <Button
                   onClick={() => handleAutoFill("hoursPerEncounter")}
                   size="sm"
-                  className="bg-[#12a6b9] hover:bg-[#0e8a9c] text-white"
+                  className="bg-[#12a6b9] hover:bg-[#0e8a9c] text-white whitespace-nowrap"
                 >
                   Auto Llenar
                 </Button>
@@ -638,14 +628,8 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
             {/* Activity Selector */}
             <div className="mt-4 p-4 border rounded-md bg-white/80">
               <Label className="mb-2 block text-gray-700 text-lg font-semibold">
-                Selecciona actividades para aplicar (haz clic en las celdas de
-                input para aplicar)
+                Selecciona las actividades (haz clic en las celdas para aplicar)
               </Label>
-              <p className="text-sm text-muted-foreground mt-2">
-                Selecciona actividades arriba y haz clic en las celdas de la
-                fila de Actividades para aplicarlas. Múltiples selecciones se
-                separarán con ",".
-              </p>
               <div className="flex flex-wrap gap-4 mt-2">
                 {loadingActivities ? (
                   <p className="text-gray-500">Cargando actividades...</p>
@@ -696,11 +680,11 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
               className={
                 breakpoint === "sm"
                   ? "flex flex-col gap-2 mb-2"
-                  : "flex justify-end space-x-4 mb-2"
+                  : "flex flex-col sm:flex-row justify-end gap-2 sm:space-x-4 mb-2"
               }
             >
               <div className="flex items-center space-x-2">
-                <Label className="text-base font-medium">Arriba:</Label>
+                <Label className="text-sm sm:text-base font-medium whitespace-nowrap">Arriba:</Label>
                 <Input
                   type="number"
                   min="0"
@@ -716,18 +700,18 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
                     }))
                   }
                   onWheel={preventWheelChange}
-                  className="w-20 text-base font-medium"
+                  className="w-16 sm:w-20 text-sm sm:text-base font-medium"
                 />
                 <Button
                   onClick={() => handleAutoFill("weeklyDistributionAbove")}
                   size="sm"
-                  className="bg-[#12a6b9] hover:bg-[#0e8a9c] text-white"
+                  className="bg-[#12a6b9] hover:bg-[#0e8a9c] text-white whitespace-nowrap text-xs sm:text-sm"
                 >
                   Auto Llenar
                 </Button>
               </div>
               <div className="flex items-center space-x-2">
-                <Label className="text-base font-medium">Abajo:</Label>
+                <Label className="text-sm sm:text-base font-medium whitespace-nowrap">Abajo:</Label>
                 <Input
                   type="number"
                   min="0"
@@ -743,12 +727,12 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
                     }))
                   }
                   onWheel={preventWheelChange}
-                  className="w-20 text-base font-medium"
+                  className="w-16 sm:w-20 text-sm sm:text-base font-medium"
                 />
                 <Button
                   onClick={() => handleAutoFill("weeklyDistributionBelow")}
                   size="sm"
-                  className="bg-[#12a6b9] hover:bg-[#0e8a9c] text-white"
+                  className="bg-[#12a6b9] hover:bg-[#0e8a9c] text-white whitespace-nowrap text-xs sm:text-sm"
                 >
                   Auto Llenar
                 </Button>
@@ -851,22 +835,26 @@ export default function TimeSettingsSection({ data, updateData, onComplete }) {
           </div>
 
           {/* Navigation Buttons */}
-          <div className="flex justify-between items-center pt-4">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-0 pt-4">
             <Button
               variant="outline"
               onClick={() => navigateSubject("prev")}
               disabled={currentSubjectIndex === 0}
-              className="text-base font-medium"
+              className="w-full sm:w-auto text-sm sm:text-base font-medium"
             >
-              <ArrowLeft className="mr-2 h-4 w-4" /> Asignatura anterior
+              <ArrowLeft className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /> 
+              <span className="hidden sm:inline">Asignatura anterior</span>
+              <span className="sm:hidden">Anterior</span>
             </Button>
             <Button
               variant="outline"
               onClick={() => navigateSubject("next")}
               disabled={currentSubjectIndex === subjects.length - 1}
-              className="text-base font-medium"
+              className="w-full sm:w-auto text-sm sm:text-base font-medium"
             >
-              Siguiente asignatura <ArrowRight className="ml-2 h-4 w-4" />
+              <span className="hidden sm:inline">Siguiente asignatura</span>
+              <span className="sm:hidden">Siguiente</span>
+              <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
           </div>
         </CardContent>

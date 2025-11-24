@@ -19,8 +19,6 @@ from rest_framework.decorators import permission_classes as api_permission_class
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-# Create your views here.
-# Diccionario para mapear nombres de modelos a clases de modelos
 MODEL_MAP = {
     'tasks': Task,
     'activities': Activity,
@@ -53,7 +51,6 @@ class GenericModelViewSet(viewsets.ModelViewSet):
         if model is None:
             return super().get_queryset()
         queryset = model.objects.all()
-        # Filtrar por schedule si el modelo es ClassTime y el parámetro está presente
         if model.__name__ == "ClassTime":
             schedule_id = self.request.query_params.get("schedule")
             if schedule_id:
@@ -68,11 +65,9 @@ class GenericModelViewSet(viewsets.ModelViewSet):
 @api_permission_classes([IsAuthenticated, IsPlannerUser | IsAdminUserCustom])
 def calculate_balance(request):
     data = request.data
-    # Aquí va tu lógica con los datos recibidos
     print("===== DATOS RECIBIDOS EN BACKEND =====")
     print("Data completo:", data)
 
-    # Asignar valores a variables de Python
     subjects_symbology = data.get('subjectsSymbology')
     weeks_count = data.get('weeksCount')
     encounters_list = data.get('encountersList', [])
@@ -81,10 +76,10 @@ def calculate_balance(request):
     above_list = data.get('aboveList', [])
     below_list = data.get('belowList', [])
     balance_below_list = data.get('balanceBelowList', [])
-    period_id = data.get('periodId')  # Nuevo: obtener el id de periodo
-    career_id = data.get('careerId')  # Nuevo: obtener el id de carrera
-    year_id = data.get('yearId')      # Nuevo: obtener el id de año
-    subject_ids = data.get('subjectIds', [])  # Nuevo: obtener ids de asignaturas
+    period_id = data.get('periodId')
+    career_id = data.get('careerId')
+    year_id = data.get('yearId')
+    subject_ids = data.get('subjectIds', [])
     group = data.get('group')
     class_room_id = data.get('classRoom')
     
@@ -96,7 +91,6 @@ def calculate_balance(request):
     print(f"classRoom: {class_room_id}")
     print("=======================================")
     
-    # Validar campos requeridos
     if not period_id:
         return Response({"error": "El campo 'periodId' es requerido"}, status=400)
     if not career_id:
@@ -120,7 +114,6 @@ def calculate_balance(request):
     print("Balance below list:", balance_below_list)
     print("Period id:", period_id)
 
-    # --- NUEVO: Crear objeto Schedule ---
     from .models import Schedule, Period, Career, Year, Subject, ClassRoom
     schedule = None
     schedule_id = None
@@ -138,7 +131,6 @@ def calculate_balance(request):
             group=group,
             class_room=class_room
         )
-        # Asignar las asignaturas seleccionadas
         if subject_ids:
             subjects = Subject.objects.filter(pk__in=subject_ids)
             schedule.subjects.set(subjects)
@@ -146,7 +138,6 @@ def calculate_balance(request):
     except Exception as e:
         return Response({"error": f"Error creando el horario: {str(e)}"}, status=400)
 
-    # Obtener la lista de días no disponibles por semana usando el id de periodo
     days_not_available_by_week = []
     if period_id:
         try:
@@ -156,7 +147,6 @@ def calculate_balance(request):
             days_not_available_by_week = []
     print("Days not available by week:", days_not_available_by_week)
     
-    # Llamar a generar_horario con los nuevos argumentos
     generar_horario(
         subjects_symbology,
         time_base_list,
@@ -170,7 +160,6 @@ def calculate_balance(request):
         schedule_id, 
         period_id,  
     )
-    # Devuelve una respuesta (puede ser lo que tu lógica retorne)
     return Response({"message": "Balance calculado correctamente", "schedule_id": schedule_id})
 
 class RegisterView(generics.CreateAPIView):
@@ -178,8 +167,7 @@ class RegisterView(generics.CreateAPIView):
     permission_classes = (AllowAny,)
     serializer_class = RegisterSerializer
 
-# Vista para gestión de usuarios solo para admin
-class UserAdminViewSet(viewsets.ModelViewSet):
+class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
     permission_classes = [IsAdminUserCustom]
@@ -295,7 +283,6 @@ def build_schedule_pdf_context(schedule_id, request=None):
         {'nombre': 'Sábado', 'index': 5},
     ]
 
-    # Traer turnos con subject, teacher y actividades
     class_times = list(
         ClassTime.objects.filter(schedule=schedule)
         .select_related('subject', 'teacher')
@@ -391,10 +378,13 @@ def build_schedule_pdf_context(schedule_id, request=None):
             'teacher_name': teacher_name,
         })
 
-    # activities_list via helper
-    activities_list = _collect_activities_for_schedule(schedule)
+    turnos_list = week_turnos_dict.get(fecha, {})
 
-    weeks_blocks = []
+    def get_activities_abbr(activities_list):
+        if not activities_list:
+            return ''
+        return '+'.join([a.get('symbology', '') for a in activities_list if a.get('symbology')])
+
     def chunk_list(lst, n):
         return [lst[i:i + n] for i in range(0, len(lst), n)]
 
@@ -527,8 +517,6 @@ def build_schedule_pdf_context(schedule_id, request=None):
     return context
 
 
-# ---
-# Nueva función: exportar PDF usando Playwright y la misma plantilla HTML
 def exportar_horario_pdf_playwright(request, schedule_id):
     print(f"===== EXPORTAR PDF: Schedule ID {schedule_id} =====")
     try:
@@ -605,8 +593,6 @@ def exportar_horario_pdf_playwright(request, schedule_id):
     return response
 
 
-# ---
-# Nueva función: exportar imagen (PNG) usando Playwright y la misma plantilla HTML
 def exportar_horario_imagen_playwright(request, schedule_id):
     print(f"===== EXPORTAR IMAGEN: Schedule ID {schedule_id} =====")
     try:

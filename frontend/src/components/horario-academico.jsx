@@ -268,9 +268,8 @@ export function HorarioAcademico({ scheduleId }) {
   const [careerName, setCareerName] = useState(""); // <-- Nuevo para el nombre de la carrera
   const [yearLabel, setYearLabel] = useState(""); // <-- Nuevo para el año (ej: 1ro, 2do, etc.)
   const [teachersMap, setTeachersMap] = useState({}); // NUEVO: mapa de id -> nombre
-  const [activitiesMap, setActivitiesMap] = useState({}); // NUEVO: mapa id -> simbología
+  const [activitiesMap, setActivitiesMap] = useState({});
 
-  // Obtener el rol del usuario desde el token JWT
   let userRole = null;
   const token = localStorage.getItem("access");
   if (token) {
@@ -285,7 +284,6 @@ export function HorarioAcademico({ scheduleId }) {
   }
   const hasRole = userRole && userRole !== "user";
 
-  // Cargar el horario y sus datos asociados
   useEffect(() => {
     if (!scheduleId) return;
     const fetchSchedule = async () => {
@@ -293,7 +291,6 @@ export function HorarioAcademico({ scheduleId }) {
       const { data: sched } = await schedulesApi.get(scheduleId);
       setSchedule(sched);
 
-      // Obtener la carrera y el año para el título
       let careerNameValue = "";
       let yearLabelValue = "";
       try {
@@ -313,11 +310,9 @@ export function HorarioAcademico({ scheduleId }) {
       setCareerName(careerNameValue);
       setYearLabel(yearLabelValue);
 
-      // Obtener el periodo
       const { data: per } = await periodsApi.get(sched.period);
       setPeriod(per);
 
-      // Obtener el nombre del curso asociado al periodo
       if (per && per.course) {
         try {
           const { data: course } = await coursesApi.get(per.course);
@@ -329,7 +324,6 @@ export function HorarioAcademico({ scheduleId }) {
         setCourseName("");
       }
 
-      // Obtener las asignaturas (para mostrar simbología)
       const { data: subjects } = await subjectsApi.getAll();
       const map = {};
       subjects.forEach((s) => {
@@ -337,7 +331,6 @@ export function HorarioAcademico({ scheduleId }) {
       });
       setSubjectsMap(map);
 
-      // NUEVO: Obtener todos los profesores y mapear id -> nombre
       const { data: teachers } = await teachersApi.getAll();
       const tmap = {};
       teachers.forEach((t) => {
@@ -345,7 +338,6 @@ export function HorarioAcademico({ scheduleId }) {
       });
       setTeachersMap(tmap);
 
-      // Obtener las actividades y mapear id -> simbología
       const { data: activities } = await activitysApi.getAll();
       const amap = {};
       activities.forEach((a) => {
@@ -353,28 +345,24 @@ export function HorarioAcademico({ scheduleId }) {
       });
       setActivitiesMap(amap);
 
-      // Obtener los turnos (class_times)
       const { data: classTimesList } = await class_times.getAll();
       const filteredClassTimes = classTimesList.filter(
         (ct) => ct.schedule === Number(scheduleId)
       );
       setClassTimes(filteredClassTimes); // solo para mostrar
       setOriginalTurnos(JSON.parse(JSON.stringify(filteredClassTimes))); // copia inmutable
-      setEditedTurnos(JSON.parse(JSON.stringify(filteredClassTimes))); // editable
+      setEditedTurnos(JSON.parse(JSON.stringify(filteredClassTimes)));
 
-      // Obtener días no disponibles SOLO del periodo actual
       const { data: diasNoDisponibles } = await days_not_availableApi.getAll();
       setDiasLibres(
         diasNoDisponibles.filter((d) => d.period === sched.period)
       );
 
-      // Obtener semanas no disponibles SOLO del periodo actual
       const { data: semanasNoDisponibles } = await weeks_not_availableApi.getAll();
       setSemanasNoDisponibles(
         semanasNoDisponibles.filter((w) => w.period === sched.period)
       );
 
-      // Calcular las semanas válidas (excluyendo semanas no disponibles)
       const startDate = parseISO(per.start);
       const endDate = parseISO(per.end);
 

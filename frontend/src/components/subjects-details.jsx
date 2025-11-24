@@ -52,17 +52,14 @@ export function SubjectsDetails() {
     careersApi.getAll().then(res => setCareers(res.data));
   }, []);
 
-  // Cargar todos los años
   useEffect(() => {
     yearsApi.getAll().then(res => setYears(res.data));
   }, []);
 
-  // Cargar todas las asignaturas
   useEffect(() => {
     subjectsApi.getAll().then(res => setSubjects(res.data));
   }, []);
 
-  // Cargar todos los profesores con autenticación y validación de array
   useEffect(() => {
     const token = localStorage.getItem("access");
     fetch(`${API_BASE_URL}/tasks/api/v1/teachers/`, {
@@ -107,11 +104,9 @@ export function SubjectsDetails() {
     }
   }, [selectedCareer, years]);
 
-  // Filtrar asignaturas según los filtros y búsqueda
   useEffect(() => {
     let result = subjects;
 
-    // Filtrar por facultad
     if (selectedFaculty) {
       const careerIds = availableCareers.map(c => c.id);
       result = result.filter(subject =>
@@ -119,17 +114,14 @@ export function SubjectsDetails() {
       );
     }
 
-    // Filtrar por carrera
     if (selectedCareer) {
       result = result.filter(subject => String(subject.career) === String(selectedCareer));
     }
 
-    // Filtrar por año
     if (selectedYear) {
       result = result.filter(subject => String(subject.year) === String(selectedYear));
     }
 
-    // Filtrar por término de búsqueda
     if (searchTerm) {
       result = result.filter(subject =>
         subject.name.toLowerCase().includes(searchTerm.toLowerCase())

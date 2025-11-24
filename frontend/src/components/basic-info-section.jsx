@@ -44,7 +44,6 @@ export default function BasicInfoSection({ data, updateData, onComplete }) {
   const [periodLoading, setPeriodLoading] = useState(false);
   const classRoomSelectorRef = useRef(null);
 
-  // Obtener facultades desde el backend
   useEffect(() => {
     facultiesApi
       .getAll()
@@ -56,7 +55,6 @@ export default function BasicInfoSection({ data, updateData, onComplete }) {
       });
   }, []);
 
-  // Obtener carreras filtradas por facultad
   useEffect(() => {
     if (localData.faculty) {
       careersApi
@@ -88,13 +86,11 @@ export default function BasicInfoSection({ data, updateData, onComplete }) {
       });
   }, []);
 
-  // Obtener años filtrados por carrera
   useEffect(() => {
     if (localData.career) {
       yearsApi
         .getAll()
         .then((response) => {
-          // Filtrar los años según la carrera seleccionada por ID
           const filteredYears = response.data.filter(
             (year) => year.career === localData.career
           );
@@ -108,7 +104,6 @@ export default function BasicInfoSection({ data, updateData, onComplete }) {
     }
   }, [localData.career]);
 
-  // Obtener periodos filtrados por curso
   useEffect(() => {
     if (localData.courseId) {
       periodsApi
@@ -127,13 +122,11 @@ export default function BasicInfoSection({ data, updateData, onComplete }) {
     }
   }, [localData.courseId]);
 
-  // Obtener asignaturas filtradas por carrera y año
   useEffect(() => {
     if (localData.career && localData.year) {
       subjectsApi
         .getAll()
         .then((response) => {
-          // Filtrar asignaturas por carrera y año
           const filteredSubjects = response.data.filter(
             (subject) =>
               subject.career === localData.career &&
@@ -150,7 +143,6 @@ export default function BasicInfoSection({ data, updateData, onComplete }) {
     }
   }, [localData.career, localData.year]);
 
-  // Obtener locales (aulas) desde el backend
   useEffect(() => {
     class_roomsApi.getAll().then((res) => setClassRooms(res.data));
   }, []);
@@ -169,7 +161,6 @@ export default function BasicInfoSection({ data, updateData, onComplete }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Actualizar localData cuando cambia data
   useEffect(() => {
     setLocalData({ ...data });
   }, [data]);
@@ -182,28 +173,27 @@ export default function BasicInfoSection({ data, updateData, onComplete }) {
 
     const newData = { ...localData, [field]: value };
 
-    // Reset dependent fields when parent field changes
+
     if (field === "faculty") {
       newData.career = "";
       newData.year = "";
       newData.subjects = [];
       newData.courseId = "";
       newData.courseName = "";
-      newData.period = ""; // Reiniciar periodo
+      newData.period = ""; 
     } else if (field === "career") {
       newData.year = "";
       newData.subjects = [];
-      newData.period = ""; // Reiniciar periodo
+      newData.period = ""; 
     } else if (field === "year") {
       newData.subjects = [];
-      newData.period = ""; // Reiniciar periodo
+      newData.period = "";
     }
 
     setLocalData(newData);
     updateData(newData);
   };
 
-  // Manejar cambio de curso
   const handleCourseChange = (courseId) => {
     const selectedCourse = courses.find((course) => course.id === courseId);
     if (selectedCourse) {
@@ -211,18 +201,16 @@ export default function BasicInfoSection({ data, updateData, onComplete }) {
         ...localData,
         courseId: selectedCourse.id,
         courseName: selectedCourse.name,
-        period: "", // Solo reiniciar el periodo
+        period: "",
       };
       setLocalData(newData);
       updateData(newData);
     }
   };
 
-  // Manejar cambio de periodo
   const handlePeriodChange = async (periodId) => {
     if (!periodId) {
       handleChange("period", "");
-      // Limpiar weeks si se borra el periodo
       setLocalData((prevData) => ({
         ...prevData,
         period: "",
@@ -240,7 +228,6 @@ export default function BasicInfoSection({ data, updateData, onComplete }) {
       const response = await periodsApi.get(periodId);
       const periodData = response.data;
       const weeks = periodData.number_of_weeks_excluding_unavailable;
-      // Actualiza period y weeks en localData
       const newData = {
         ...localData,
         period: periodId,
@@ -276,7 +263,6 @@ export default function BasicInfoSection({ data, updateData, onComplete }) {
     updateData(newData);
   };
 
-  // Traducción de errores
   const errorMessages = {
     faculty: "La facultad es obligatoria",
     career: "La carrera es obligatoria",
@@ -317,7 +303,7 @@ export default function BasicInfoSection({ data, updateData, onComplete }) {
     }
   };
 
-  // Get available subjects based on current selections
+
   const availableSubjects = subjects;
 
   return (
@@ -366,7 +352,6 @@ export default function BasicInfoSection({ data, updateData, onComplete }) {
               )}
             </div>
 
-            {/* Career Selection - Only enabled if faculty is selected */}
             <div className="space-y-2">
               <Label htmlFor="career" className="text-gray-700 text-lg font-semibold">Carrera</Label>
               <Select
@@ -467,7 +452,7 @@ export default function BasicInfoSection({ data, updateData, onComplete }) {
               )}
             </div>
 
-            {/* Period Selection - Only enabled if course is selected */}
+            {/* Period Selection */}
             <div className="space-y-2">
               <Label htmlFor="period" className="text-gray-700 text-lg font-semibold">Período</Label>
               <Select
@@ -538,7 +523,7 @@ export default function BasicInfoSection({ data, updateData, onComplete }) {
             </div>
           </div>
 
-          {/* Subjects - Only shown if year is selected */}
+          {/* Subjects */}
           {localData.year && (
             <div className="space-y-3 pt-4 bg-gradient-to-r from-[#12a6b9]/10 to-[#006599]/10 border border-[#12a6b9]/20 rounded-lg px-4 py-3">
               <Label className="text-[#006599] font-semibold text-lg">
@@ -585,7 +570,6 @@ export default function BasicInfoSection({ data, updateData, onComplete }) {
             </div>
           )}
 
-          {/* Grupo y Local (Aula) - Ahora dentro del mismo contenedor de grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label htmlFor="group" className="text-gray-700 text-lg font-semibold">Grupo</Label>
