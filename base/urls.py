@@ -4,13 +4,13 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 from base import views
-from base.views import RegisterView, UserAdminViewSet, CustomTokenObtainPairView, exportar_horario_pdf_playwright, exportar_horario_imagen_playwright
+from base.views import RegisterView, UserViewSet, CustomTokenObtainPairView, exportar_horario_pdf_playwright, exportar_horario_imagen_playwright
 
 router = routers.DefaultRouter()
 router.register(r'(?P<model_name>[^/.]+)', views.GenericModelViewSet, basename='generic')
 
 admin_router = routers.DefaultRouter()
-admin_router.register(r'users', UserAdminViewSet, basename='user-admin')
+admin_router.register(r'users', UserViewSet, basename='user-admin')
 
 urlpatterns = [
     path('api/v1/whoami/', views.whoami, name='whoami'),
