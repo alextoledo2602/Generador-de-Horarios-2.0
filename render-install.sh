@@ -6,8 +6,9 @@ set -o errexit
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# Install Playwright browsers for PDF generation (skip system dependencies)
-PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=0 playwright install chromium
+# Install Playwright browsers for PDF generation
+# Note: System dependencies should be handled by Render's environment
+playwright install chromium
 
 # Collect static files
 python manage.py collectstatic --no-input
