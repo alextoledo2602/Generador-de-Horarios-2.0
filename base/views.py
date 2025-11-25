@@ -293,6 +293,9 @@ def build_schedule_pdf_context(schedule_id, request=None):
 
     last_shift_in_the_morning = 3
 
+    # Collect activities for the legend
+    activities_list = _collect_activities_for_schedule(schedule)
+
     dias_libres = {d.day: d.reason for d in dias_no_disponibles}
 
     def _to_date_obj(x):
@@ -377,8 +380,6 @@ def build_schedule_pdf_context(schedule_id, request=None):
             'subject_name': subject.name,
             'teacher_name': teacher_name,
         })
-
-    turnos_list = week_turnos_dict.get(fecha, {})
 
     def get_activities_abbr(activities_list):
         if not activities_list:
