@@ -6,7 +6,7 @@ import copy
 # Datos iniciales
 
 
-def generar_horario(a,f,s,bs,enc,ub,lb,d,activ, schedule_id=None, period_id=None):
+def generar_horario(a,f,s,bs,enc,ub,lb,d,activ, schedule_id=None, period_id=None, tabu_iterations=50):
 
     class TabuSearch:
         def __init__(self, init_solution, n, m, h, Q, lbound=None, ubound=None):
@@ -175,7 +175,7 @@ def generar_horario(a,f,s,bs,enc,ub,lb,d,activ, schedule_id=None, period_id=None
 
     balance = TabuSearch(initial_sol, len(asignaturas), num_semanas, horas, turnos_por_semana, lbound, ubound)
     
-    balance.learn(50)
+    balance.learn(tabu_iterations)
     balance_carga = [list(fila) for fila in zip(*balance.best_so_far)]#Traspuesta para compaibilidad con el 3er codigo
 
     print(f'Balance: {balance_carga}')

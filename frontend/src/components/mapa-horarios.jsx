@@ -15,6 +15,7 @@ import {
 } from "../api/tasks.api";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
+import ucfLogo from "../assets/images/ucflogo.png";
 
 export function MapaHorarios() {
   // Estados para cada nivel de la jerarquía
@@ -338,7 +339,12 @@ export function MapaHorarios() {
     }
     // --------- NUEVO: Crear periodo ---------
     if (level === "periodos") {
-      navigate("/periodos", { state: { from: window.location.pathname } });
+      // Pasar el curso seleccionado
+      const hierarchyData = {
+        courseId: selectedPath.curso?.id || "",
+        fromMapaHorarios: true
+      };
+      navigate("/periodos", { state: { from: window.location.pathname, hierarchyData } });
       return;
     }
     // --------- NUEVO: Crear curso ---------
@@ -348,21 +354,36 @@ export function MapaHorarios() {
     }
     // --------- NUEVO: Crear carrera ---------
     if (level === "carreras") {
-      navigate("/carreras", { state: { from: window.location.pathname } });
+      // Pasar la facultad seleccionada
+      const hierarchyData = {
+        facultyId: selectedPath.facultad?.id || "",
+        fromMapaHorarios: true
+      };
+      navigate("/carreras", { state: { from: window.location.pathname, hierarchyData } });
       return;
     }
     // --------- NUEVO: Crear año ---------
     if (level === "años") {
-      navigate("/años", { state: { from: window.location.pathname } });
+      // Pasar la carrera seleccionada
+      const hierarchyData = {
+        careerId: selectedPath.carrera?.id || "",
+        fromMapaHorarios: true
+      };
+      navigate("/años", { state: { from: window.location.pathname, hierarchyData } });
       return;
     }
     // --------- NUEVO: Crear horario ---------
     if (level === "horarios") {
-      navigate("/schedule", { state: { from: window.location.pathname } });
-      return;
-    }
-    if (level === "horarios") {
-      navigate("/tasks-create", { state: { from: window.location.pathname } });
+      // Pasar los datos de la jerarquía seleccionada al crear horario
+      const hierarchyData = {
+        faculty: selectedPath.facultad?.id || "",
+        career: selectedPath.carrera?.id || "",
+        year: selectedPath.año?.id || "",
+        courseId: selectedPath.curso?.id || "",
+        period: selectedPath.periodo?.id || "",
+        fromMapaHorarios: true // Flag para indicar que viene del mapa de horarios
+      };
+      navigate("/schedule", { state: { from: window.location.pathname, hierarchyData } });
       return;
     }
     // Aquí implementarías la creación
@@ -605,8 +626,26 @@ export function MapaHorarios() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-300 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gray-300 p-6 relative overflow-hidden">
+      
+      <div 
+        className="fixed pointer-events-none z-0"
+        style={{
+          right: '-120px',
+          top: '60%', 
+          transform: 'translateY(-50%)',
+          width: '500px',
+          height: '500px',
+        }}
+      >
+        <img 
+          src={ucfLogo} 
+          alt="UCF Logo" 
+          className="w-full h-full object-contain opacity-10 grayscale"
+        />
+      </div>
+
+      <div className="max-w-7xl mx-auto relative z-10">
         <div className="mb-8">
           <h1 className="text-3xl font-bold tracking-tight mb-2 text-[#006599] drop-shadow-sm">
             Mapa de Horarios Académicos

@@ -45,7 +45,7 @@ export default function BalanceSection({ data, updateData, onComplete }) {
   const timeSettings = data.timeSettings || {};
 
   const [balanceData, setBalanceData] = useState({
-    balanceValue: 100,
+    balanceValue: 50,
     weeklyBalance: Array(weeks).fill(36),
   });
 
@@ -218,6 +218,7 @@ export default function BalanceSection({ data, updateData, onComplete }) {
         return below;
       }),
       balanceBelowList: balanceData.weeklyBalance,
+      tabuIterations: balanceData.balanceValue,
       periodId: data.basicInfo?.period || null,
       careerId: data.basicInfo?.career || null,
       yearId: data.basicInfo?.year || null,
@@ -261,8 +262,8 @@ export default function BalanceSection({ data, updateData, onComplete }) {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!balanceData.balanceValue || balanceData.balanceValue < 0)
-      newErrors.balanceValue = "Valid balance value is required";
+    if (!balanceData.balanceValue || balanceData.balanceValue < 1 || balanceData.balanceValue > 999)
+      newErrors.balanceValue = "El valor debe estar entre 1 y 999";
     if (balanceData.weeklyBalance.some((v) => v === undefined || v === null || v < 0))
       newErrors.weeklyBalance = "No se permiten valores negativos o vacíos en las semanas";
 
@@ -389,17 +390,17 @@ export default function BalanceSection({ data, updateData, onComplete }) {
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center pt-2">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
                 <Label htmlFor="balanceValue" className="whitespace-nowrap text-gray-700 text-base sm:text-lg font-semibold">
-                  Valor para el balance:
+                  Iteraciones de optimización:
                 </Label>
                 <Input
                   id="balanceValue"
                   type="number"
-                  min="0"
-                  max="99"
-                  className={`w-full sm:w-20 h-12 text-base font-medium px-4 border-2 border-gray-300 bg-gray-300 focus:bg-white focus:border-[#12a6b9] focus:shadow-[0_0_0_2px_rgba(18,166,185,0.1)] transition-all duration-200 ${inputNumberNoArrowsClass} ${errors.balanceValue ? "border-red-500" : ""}`}
+                  min="1"
+                  max="999"
+                  className={`w-full sm:w-24 h-12 text-base font-medium px-4 border-2 border-gray-300 bg-gray-300 focus:bg-white focus:border-[#12a6b9] focus:shadow-[0_0_0_2px_rgba(18,166,185,0.1)] transition-all duration-200 ${inputNumberNoArrowsClass} ${errors.balanceValue ? "border-red-500" : ""}`}
                   value={balanceData.balanceValue}
                   onChange={(e) =>
-                    handleChange("balanceValue", Math.min(e.target.value, 99))
+                    handleChange("balanceValue", Math.min(Math.max(e.target.value, 1), 999))
                   }
                   onWheel={preventWheelChange}
                   style={inputNumberNoArrows}

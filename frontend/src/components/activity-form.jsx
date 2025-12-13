@@ -6,11 +6,13 @@ export function ActivityForm() {
   const [name, setName] = useState("");
   const [symbology, setSymbology] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e, continueAdding = false) => {
     e.preventDefault();
     setError("");
+    setSuccess("");
     if (!name.trim()) {
       setError("El nombre es obligatorio");
       return;
@@ -21,7 +23,13 @@ export function ActivityForm() {
     }
     try {
       await activitysApi.create({ name, symbology });
-      navigate("/actividades");
+      if (continueAdding) {
+        setSuccess("Actividad creada exitosamente");
+        setName("");
+        setSymbology("");
+      } else {
+        navigate("/actividades");
+      }
     } catch (err) {
       let msg = "Error al crear la actividad.";
       if (err.response && err.response.data) {
@@ -39,7 +47,10 @@ export function ActivityForm() {
         {error && (
           <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">{error}</div>
         )}
-        <form onSubmit={handleSubmit}>
+        {success && (
+          <div className="mb-4 p-3 bg-green-100 text-green-700 rounded">{success}</div>
+        )}
+        <form onSubmit={(e) => handleSubmit(e, false)}>
           <div className="mb-6">
             <label className="block text-[#006599] font-semibold mb-2 text-lg">
               Nombre de la Actividad
@@ -68,20 +79,29 @@ export function ActivityForm() {
               min={1}
             />
           </div>
-          <div className="flex justify-end mt-6">
+          <div className="flex flex-col sm:flex-row justify-between gap-3 mt-6">
             <button
               type="button"
-              className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md mr-2 hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 text-base font-medium"
+              className="w-full sm:w-auto px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 text-base font-medium order-2 sm:order-1"
               onClick={() => navigate("/actividades")}
             >
               Cancelar
             </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-[#006599] hover:bg-[#005080] text-white rounded-md shadow-lg hover:shadow-xl transition-all duration-200 text-base font-semibold"
-            >
-              Guardar Actividad
-            </button>
+            <div className="flex flex-col sm:flex-row gap-2 order-1 sm:order-2">
+              <button
+                type="button"
+                onClick={(e) => handleSubmit(e, true)}
+                className="w-full sm:w-auto px-4 py-2 bg-[#12a6b9] hover:bg-[#0e8a9c] text-white rounded-md shadow-lg hover:shadow-xl transition-all duration-200 text-base font-semibold whitespace-nowrap"
+              >
+                Guardar y Crear Otro
+              </button>
+              <button
+                type="submit"
+                className="w-full sm:w-auto px-4 py-2 bg-[#006599] hover:bg-[#005080] text-white rounded-md shadow-lg hover:shadow-xl transition-all duration-200 text-base font-semibold"
+              >
+                Guardar Actividad
+              </button>
+            </div>
           </div>
         </form>
       </div>

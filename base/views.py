@@ -76,6 +76,7 @@ def calculate_balance(request):
     above_list = data.get('aboveList', [])
     below_list = data.get('belowList', [])
     balance_below_list = data.get('balanceBelowList', [])
+    tabu_iterations = data.get('tabuIterations', 50)  # Valor por defecto 50 si no se envía
     period_id = data.get('periodId')
     career_id = data.get('careerId')
     year_id = data.get('yearId')
@@ -89,6 +90,7 @@ def calculate_balance(request):
     print(f"subjectIds: {subject_ids}")
     print(f"group: {group}")
     print(f"classRoom: {class_room_id}")
+    print(f"tabuIterations: {tabu_iterations}")
     print("=======================================")
     
     if not period_id:
@@ -158,7 +160,8 @@ def calculate_balance(request):
         days_not_available_by_week,
         activities_list,
         schedule_id, 
-        period_id,  
+        period_id,
+        tabu_iterations,
     )
     return Response({"message": "Balance calculado correctamente", "schedule_id": schedule_id})
 
@@ -197,7 +200,6 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
 from django.http import HttpResponse
-import pdfkit
 from django.template.loader import render_to_string
 import os
 from django.templatetags.static import static
@@ -293,7 +295,6 @@ def build_schedule_pdf_context(schedule_id, request=None):
 
     last_shift_in_the_morning = 3
 
-    # Collect activities for the legend
     activities_list = _collect_activities_for_schedule(schedule)
 
     dias_libres = {d.day: d.reason for d in dias_no_disponibles}

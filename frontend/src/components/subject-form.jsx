@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { X } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   facultiesApi,
   careersApi,
@@ -12,16 +12,29 @@ import {
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 export function SubjectForm() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Obtener filtros iniciales desde location.state
+  const initialFilters = location.state?.filters || {};
+  
   // Estados para los campos del formulario
   const [formData, setFormData] = useState({
     name: "",
     symbology: "",
     hours_found: 80,
     type: "simple",
-    faculty_id: "",
-    career_id: "",
-    year_id: "",
+    faculty_id: initialFilters.faculty || "",
+    career_id: initialFilters.career || "",
+    year_id: initialFilters.year || "",
     teachers: [],
+  });
+  
+  // Guardar los valores base de las categorías (los que vienen de los filtros)
+  const [baseFilters] = useState({
+    faculty_id: initialFilters.faculty || "",
+    career_id: initialFilters.career || "",
+    year_id: initialFilters.year || "",
   });
 
   // Estados para las opciones de los selects
@@ -43,8 +56,6 @@ export function SubjectForm() {
     { value: "optativa", label: "Optativa" },
     { value: "electiva", label: "Electiva" }
   ];
-
-  const navigate = useNavigate();
 
   // Cargar facultades al montar el componente
   useEffect(() => {
@@ -198,7 +209,7 @@ export function SubjectForm() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e, continueAdding = false) => {
     e.preventDefault();
     setSubmitError("");
     setSubmitSuccess("");
@@ -222,8 +233,27 @@ export function SubjectForm() {
       // Enviar los datos
       await subjectsApi.create(subjectData);
 
-      // Redirigir instantáneamente a la lista de asignaturas
-      navigate("/subjects-details");
+      if (continueAdding) {
+        // Limpiar solo los campos específicos, manteniendo los filtros base
+        setSubmitSuccess("Asignatura creada exitosamente");
+        setFormData({
+          name: "",
+          symbology: "",
+          hours_found: 80,
+          type: "simple",
+          faculty_id: baseFilters.faculty_id,
+          career_id: baseFilters.career_id,
+          year_id: baseFilters.year_id,
+          teachers: [],
+        });
+        setSelectedTeachers([]);
+        setSearchTerm("");
+        // Scroll al inicio
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        // Redirigir a la lista de asignaturas
+        navigate("/subjects-details");
+      }
     } catch (error) {
       console.error("Error al crear la asignatura:", error);
       let msg = "Error al crear la asignatura.";
@@ -269,7 +299,7 @@ export function SubjectForm() {
           <div className="mb-4 p-3 bg-green-100 text-green-700 rounded">{submitSuccess}</div>
         )}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={(e) => handleSubmit(e, false)}>
           {/* Primera fila: Nombre, Simbología y Fondo de Horas */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             <div>
@@ -476,20 +506,29 @@ export function SubjectForm() {
           </div>
 
           {/* Botones de acción */}
-          <div className="flex justify-end mt-6">
+          <div className="flex flex-col sm:flex-row justify-between gap-3 mt-6">
             <button
               type="button"
-              className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md mr-2 hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 text-base font-medium"
+              className="w-full sm:w-auto px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 text-base font-medium order-2 sm:order-1"
               onClick={() => navigate("/subjects-details")}
             >
               Cancelar
             </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-[#006599] hover:bg-[#005080] text-white rounded-md shadow-lg hover:shadow-xl transition-all duration-200 text-base font-semibold"
-            >
-              Guardar Asignatura
-            </button>
+            <div className="flex flex-col sm:flex-row gap-2 order-1 sm:order-2">
+              <button
+                type="button"
+                onClick={(e) => handleSubmit(e, true)}
+                className="w-full sm:w-auto px-4 py-2 bg-[#12a6b9] hover:bg-[#0e8a9c] text-white rounded-md shadow-lg hover:shadow-xl transition-all duration-200 text-base font-semibold whitespace-nowrap"
+              >
+                Guardar y Crear Otra
+              </button>
+              <button
+                type="submit"
+                className="w-full sm:w-auto px-4 py-2 bg-[#006599] hover:bg-[#005080] text-white rounded-md shadow-lg hover:shadow-xl transition-all duration-200 text-base font-semibold"
+              >
+                Guardar Asignatura
+              </button>
+            </div>
           </div>
         </form>
       </div>

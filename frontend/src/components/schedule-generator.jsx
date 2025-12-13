@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import BasicInfoSection from "@/components/basic-info-section";
@@ -10,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Check, Info, Clock, Scale } from "lucide-react";
 
 export default function ScheduleGenerator() {
+	const location = useLocation();
 	const [activeTab, setActiveTab] = useState("basic-info");
 	const [completedSections, setCompletedSections] = useState({
 		"basic-info": false,
@@ -38,6 +40,24 @@ export default function ScheduleGenerator() {
 			balanceItems: Array(14).fill(36),
 		},
 	});
+
+	// Cargar datos de la jerarquía si viene desde mapa-horarios
+	useEffect(() => {
+		if (location.state?.hierarchyData && location.state.hierarchyData.fromMapaHorarios) {
+			const { faculty, career, year, courseId, period } = location.state.hierarchyData;
+			setFormData((prev) => ({
+				...prev,
+				basicInfo: {
+					...prev.basicInfo,
+					faculty: faculty || "",
+					career: career || "",
+					year: year || "",
+					courseId: courseId || "",
+					period: period || "",
+				},
+			}));
+		}
+	}, [location.state]);
 
 	// Actualiza la sección correspondiente del formData
 	const updateFormData = (section, data) => {
@@ -144,6 +164,7 @@ export default function ScheduleGenerator() {
 								data={formData.basicInfo}
 								updateData={(data) => updateFormData("basicInfo", data)}
 								onComplete={() => completeSection("basic-info")}
+								fromMapaHorarios={location.state?.hierarchyData?.fromMapaHorarios || false}
 							/>
 						</TabsContent>
 

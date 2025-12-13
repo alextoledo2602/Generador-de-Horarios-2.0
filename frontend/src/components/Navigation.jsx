@@ -45,7 +45,7 @@ export function Navigation() {
     <>
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div className="flex justify-between items-center py-3 px-4 md:py-4 md:px-6 bg-[#006599] shadow-lg">
+      <div className="flex justify-between items-center py-4 px-4 md:py-4 md:px-6 bg-[#006599] shadow-lg">
         <div className="flex items-center min-w-0">
           <button
             onClick={toggleSidebar}

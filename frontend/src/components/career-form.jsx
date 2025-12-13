@@ -17,8 +17,16 @@ export function CareerForm() {
   const location = useLocation();
 
   useEffect(() => {
-    facultiesApi.getAll().then(res => setFaculties(res.data));
-  }, []);
+    facultiesApi.getAll().then(res => {
+      setFaculties(res.data);
+      
+      // Si viene desde mapa-horarios con facultyId, seleccionarlo
+      const hierarchyData = location.state?.hierarchyData;
+      if (hierarchyData?.fromMapaHorarios && hierarchyData?.facultyId) {
+        setFaculty(hierarchyData.facultyId);
+      }
+    });
+  }, [location.state]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

@@ -29,7 +29,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowRight } from "lucide-react";
 
-export default function BasicInfoSection({ data, updateData, onComplete }) {
+export default function BasicInfoSection({ data, updateData, onComplete, fromMapaHorarios = false }) {
   const [localData, setLocalData] = useState({ ...data });
   const [errors, setErrors] = useState({});
   const [faculties, setFaculties] = useState([]);
@@ -43,6 +43,7 @@ export default function BasicInfoSection({ data, updateData, onComplete }) {
   const [showClassRoomDropdown, setShowClassRoomDropdown] = useState(false);
   const [periodLoading, setPeriodLoading] = useState(false);
   const classRoomSelectorRef = useRef(null);
+  const [initialDataLoaded, setInitialDataLoaded] = useState(false);
 
   useEffect(() => {
     facultiesApi
@@ -163,7 +164,11 @@ export default function BasicInfoSection({ data, updateData, onComplete }) {
 
   useEffect(() => {
     setLocalData({ ...data });
-  }, [data]);
+    // Si viene del mapa de horarios y hay datos precargados, marcar como cargados
+    if (fromMapaHorarios && !initialDataLoaded && (data.faculty || data.career || data.year || data.courseId || data.period)) {
+      setInitialDataLoaded(true);
+    }
+  }, [data, fromMapaHorarios, initialDataLoaded]);
 
   const handleChange = (field, value) => {
     // Aplicar restricciones a los valores
@@ -173,19 +178,21 @@ export default function BasicInfoSection({ data, updateData, onComplete }) {
 
     const newData = { ...localData, [field]: value };
 
+    // Solo resetear campos relacionados si no viene del mapa de horarios o si ya se cargaron los datos iniciales
+    const shouldResetRelatedFields = !fromMapaHorarios || initialDataLoaded;
 
-    if (field === "faculty") {
+    if (field === "faculty" && shouldResetRelatedFields) {
       newData.career = "";
       newData.year = "";
       newData.subjects = [];
       newData.courseId = "";
       newData.courseName = "";
       newData.period = ""; 
-    } else if (field === "career") {
+    } else if (field === "career" && shouldResetRelatedFields) {
       newData.year = "";
       newData.subjects = [];
       newData.period = ""; 
-    } else if (field === "year") {
+    } else if (field === "year" && shouldResetRelatedFields) {
       newData.subjects = [];
       newData.period = "";
     }
@@ -201,8 +208,11 @@ export default function BasicInfoSection({ data, updateData, onComplete }) {
         ...localData,
         courseId: selectedCourse.id,
         courseName: selectedCourse.name,
-        period: "",
       };
+      // Solo resetear el periodo si no viene del mapa de horarios o si ya se cargaron los datos iniciales
+      if (!fromMapaHorarios || initialDataLoaded) {
+        newData.period = "";
+      }
       setLocalData(newData);
       updateData(newData);
     }

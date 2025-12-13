@@ -22,8 +22,6 @@ PuLP==2.9.0
 # PDF Export
 playwright==1.55.0
 pymupdf==1.24.0
-pdfkit==1.0.0
-Pillow==10.1.0
 
 # Utilities
 python-dateutil==2.8.2

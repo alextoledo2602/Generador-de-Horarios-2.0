@@ -19,8 +19,16 @@ export function YearForm() {
   const location = useLocation();
 
   useEffect(() => {
-    careersApi.getAll().then(res => setCareers(res.data));
-  }, []);
+    careersApi.getAll().then(res => {
+      setCareers(res.data);
+      
+      // Si viene desde mapa-horarios con careerId, seleccionarlo
+      const hierarchyData = location.state?.hierarchyData;
+      if (hierarchyData?.fromMapaHorarios && hierarchyData?.careerId) {
+        setCareer(hierarchyData.careerId);
+      }
+    });
+  }, [location.state]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

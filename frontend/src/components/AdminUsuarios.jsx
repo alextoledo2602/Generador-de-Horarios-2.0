@@ -81,7 +81,7 @@ export default function AdminUsuarios() {
 		}
 	};
 
-	const handleSubmit = async (e) => {
+	const handleSubmit = async (e, continueAdding = false) => {
 		e.preventDefault();
 		setError("");
 		setSuccess("");
@@ -97,12 +97,21 @@ export default function AdminUsuarios() {
 			if (editingUser) {
 				await usersApi.update(editingUser.id, body);
 				setSuccess("Usuario actualizado");
+				setShowDialog(false);
+				fetchUsers();
 			} else {
 				await usersApi.create(body);
-				setSuccess("Usuario creado");
+				if (continueAdding) {
+					setSuccess("Usuario creado exitosamente");
+					setForm({ username: "", email: "", role: "user", password: "" });
+					setShowPassword(false);
+					fetchUsers();
+				} else {
+					setSuccess("Usuario creado");
+					setShowDialog(false);
+					fetchUsers();
+				}
 			}
-			setShowDialog(false);
-			fetchUsers();
 		} catch {
 			setError("No se pudo guardar el usuario");
 		}
@@ -291,21 +300,32 @@ export default function AdminUsuarios() {
 									</button>
 								</div>
 							</div>
-							<div className="flex justify-end gap-2">
+							<div className="flex flex-col sm:flex-row justify-between gap-2 sm:gap-3">
 								<Button
 									type="button"
 									variant="outline"
-									className="bg-gray-200 text-gray-700"
+									className="w-full sm:w-auto bg-gray-200 text-gray-700 order-2 sm:order-1"
 									onClick={() => setShowDialog(false)}
 								>
 									Cancelar
 								</Button>
-								<Button
-									type="submit"
-									className="bg-[#006599] text-white font-semibold hover:bg-[#005080]"
-								>
-									{editingUser ? "Guardar Cambios" : "Crear Usuario"}
-								</Button>
+								<div className="flex flex-col sm:flex-row gap-2 order-1 sm:order-2">
+									{!editingUser && (
+										<Button
+											type="button"
+											onClick={(e) => handleSubmit(e, true)}
+											className="w-full sm:w-auto bg-[#12a6b9] text-white font-semibold hover:bg-[#0e8ca0] whitespace-nowrap"
+										>
+											Crear y Agregar Otro
+										</Button>
+									)}
+									<Button
+										type="submit"
+										className="w-full sm:w-auto bg-[#006599] text-white font-semibold hover:bg-[#005080]"
+									>
+										{editingUser ? "Guardar Cambios" : "Crear Usuario"}
+									</Button>
+								</div>
 							</div>
 							{error && (
 								<div className="mt-4 text-red-700 bg-red-100 rounded p-2">

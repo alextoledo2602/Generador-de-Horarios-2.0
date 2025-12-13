@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -41,6 +41,10 @@ export function SubjectsDetails() {
   const [filteredSubjects, setFilteredSubjects] = useState([]);
 
   const navigate = useNavigate();
+  
+  // Para evitar restaurar varias veces
+  const restoredRef = useRef(false);
+  const dataLoadedRef = useRef(false);
 
   // Cargar todas las facultades
   useEffect(() => {
@@ -55,6 +59,72 @@ export function SubjectsDetails() {
   useEffect(() => {
     yearsApi.getAll().then(res => setYears(res.data));
   }, []);
+
+  // Restaurar filtros DESPUÉS de que los datos estén cargados
+  useEffect(() => {
+    if (restoredRef.current) return;
+    
+    // Esperar a que todos los datos estén cargados
+    if (faculties.length === 0 || careers.length === 0 || years.length === 0) return;
+    
+    dataLoadedRef.current = true;
+    
+    const savedFilters = localStorage.getItem("subjectsFilters");
+    if (savedFilters) {
+      try {
+        const filters = JSON.parse(savedFilters);
+        setSearchTerm(filters.searchTerm || "");
+        
+        // Restaurar facultad
+        if (filters.selectedFaculty) {
+          setSelectedFaculty(filters.selectedFaculty);
+          
+          // Cargar carreras disponibles para esta facultad
+          const filteredCareers = careers.filter(
+            (career) => String(career.faculty) === String(filters.selectedFaculty)
+          );
+          setAvailableCareers(filteredCareers);
+          
+          // Restaurar carrera si existe y pertenece a la facultad
+          if (filters.selectedCareer && 
+              filteredCareers.some(c => String(c.id) === String(filters.selectedCareer))) {
+            setSelectedCareer(filters.selectedCareer);
+            
+            // Cargar años disponibles para esta carrera
+            const filteredYears = years.filter(
+              (year) => String(year.career) === String(filters.selectedCareer)
+            );
+            setAvailableYears(filteredYears);
+            
+            // Restaurar año si existe y pertenece a la carrera
+            if (filters.selectedYear && 
+                filteredYears.some(y => String(y.id) === String(filters.selectedYear))) {
+              setSelectedYear(filters.selectedYear);
+            }
+          }
+        }
+        
+        restoredRef.current = true;
+      } catch {
+        localStorage.removeItem("subjectsFilters");
+        restoredRef.current = true;
+      }
+    } else {
+      restoredRef.current = true;
+    }
+  }, [faculties, careers, years]);
+
+  // Guardar filtros en localStorage cada vez que cambien
+  useEffect(() => {
+    if (!restoredRef.current) return; // Solo guardar después de la primera carga
+    const filters = {
+      searchTerm,
+      selectedFaculty,
+      selectedCareer,
+      selectedYear
+    };
+    localStorage.setItem("subjectsFilters", JSON.stringify(filters));
+  }, [searchTerm, selectedFaculty, selectedCareer, selectedYear]);
 
   useEffect(() => {
     subjectsApi.getAll().then(res => setSubjects(res.data));
@@ -76,31 +146,67 @@ export function SubjectsDetails() {
       .catch(() => setTeachers([]));
   }, []);
 
-  // Actualizar carreras disponibles cuando cambia la facultad
+  // Actualizar carreras disponibles cuando cambia la facultad (cambios manuales del usuario)
   useEffect(() => {
+    if (!restoredRef.current || !dataLoadedRef.current) return; // Esperar a que se restauren los filtros
+    
     if (selectedFaculty) {
-      setAvailableCareers(
-        careers.filter((career) => String(career.faculty) === String(selectedFaculty))
-      );
-      setSelectedCareer("");
-      setSelectedYear("");
+      const filtered = careers.filter((career) => String(career.faculty) === String(selectedFaculty));
+      setAvailableCareers(filtered);
+      
+      // Solo resetear si la carrera seleccionada no pertenece a la nueva facultad
+      if (selectedCareer && !filtered.some(c => String(c.id) === String(selectedCareer))) {
+        setSelectedCareer("");
+        setSelectedYear("");
+      }
     } else {
       setAvailableCareers([]);
-      setSelectedCareer("");
-      setSelectedYear("");
+      if (selectedCareer) {
+        setSelectedCareer("");
+        setSelectedYear("");
+      }
+    }
+  }, [selectedFaculty, careers]);
+
+  // Actualizar años disponibles cuando cambia la carrera (cambios manuales del usuario)
+  useEffect(() => {
+    if (!restoredRef.current || !dataLoadedRef.current) return; // Esperar a que se restauren los filtros
+    
+    if (selectedFaculty) {
+      const filtered = careers.filter((career) => String(career.faculty) === String(selectedFaculty));
+      setAvailableCareers(filtered);
+      
+      // Solo resetear si la carrera seleccionada no pertenece a la nueva facultad
+      if (selectedCareer && !filtered.some(c => String(c.id) === String(selectedCareer))) {
+        setSelectedCareer("");
+        setSelectedYear("");
+      }
+    } else {
+      setAvailableCareers([]);
+      if (selectedCareer) {
+        setSelectedCareer("");
+        setSelectedYear("");
+      }
     }
   }, [selectedFaculty, careers]);
 
   // Actualizar años disponibles cuando cambia la carrera
   useEffect(() => {
+    if (!restoredRef.current) return; // Esperar a que se restauren los filtros
+    
     if (selectedCareer) {
-      setAvailableYears(
-        years.filter((year) => String(year.career) === String(selectedCareer))
-      );
-      setSelectedYear("");
+      const filtered = years.filter((year) => String(year.career) === String(selectedCareer));
+      setAvailableYears(filtered);
+      
+      // Solo resetear si el año seleccionado no pertenece a la nueva carrera
+      if (selectedYear && !filtered.some(y => String(y.id) === String(selectedYear))) {
+        setSelectedYear("");
+      }
     } else {
       setAvailableYears([]);
-      setSelectedYear("");
+      if (selectedYear) {
+        setSelectedYear("");
+      }
     }
   }, [selectedCareer, years]);
 
@@ -201,7 +307,18 @@ export function SubjectsDetails() {
         </h1>
         <Button
           className="bg-green-600 hover:bg-green-700"
-          onClick={() => navigate("/asignaturas")}
+          onClick={() => {
+            // Pasar los filtros actuales al formulario
+            navigate("/asignaturas", { 
+              state: { 
+                filters: {
+                  faculty: selectedFaculty,
+                  career: selectedCareer,
+                  year: selectedYear
+                }
+              } 
+            });
+          }}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

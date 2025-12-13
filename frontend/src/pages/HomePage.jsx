@@ -11,7 +11,7 @@ export function HomePage() {
         <img
           src={logo}
           alt="Logo HorarioUCF"
-          className="mx-auto mb-6 h-40 w-40 rounded-xl shadow-lg"
+          className="mx-auto mb-6 h-40 w-40 rounded-xl"
           style={{ objectFit: "contain" }}
         />
         <h1 className="text-5xl font-bold mb-6">Bienvenido a HorarioUCF</h1>

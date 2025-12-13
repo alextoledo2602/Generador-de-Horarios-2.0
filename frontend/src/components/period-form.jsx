@@ -19,6 +19,7 @@ export const PeriodForm = () => {
   const [periodoId, setPeriodoId] = useState(null);
   const [formErrors, setFormErrors] = useState({});
   const [submitError, setSubmitError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -29,20 +30,25 @@ export const PeriodForm = () => {
   });
   const [weekReason, setWeekReason] = useState("");
 
-
-
   // Cargar cursos desde la API
   useEffect(() => {
     coursesApi
       .getAll()
       .then((response) => {
         setCursos(response.data);
-        if (response.data.length > 0) setCursoId(response.data[0].id);
+        
+        // Si viene desde mapa-horarios con courseId, seleccionarlo
+        const hierarchyData = location.state?.hierarchyData;
+        if (hierarchyData?.fromMapaHorarios && hierarchyData?.courseId) {
+          setCursoId(hierarchyData.courseId);
+        } else if (response.data.length > 0) {
+          setCursoId(response.data[0].id);
+        }
       })
       .catch((error) => {
         console.error("Error al obtener cursos:", error);
       });
-  }, []);
+  }, [location.state]);
 
   // Formatear fecha DD-MM-AAAA
   const formatDate = (date) => {
@@ -174,9 +180,10 @@ export const PeriodForm = () => {
   };
 
   // Guardar período
-  const handleCrearPeriodo = async () => {
+  const handleCrearPeriodo = async (continueAdding = false) => {
     setFormErrors({});
     setSubmitError("");
+    setSuccessMessage("");
     if (!validateForm()) {
       return;
     }
@@ -207,11 +214,28 @@ export const PeriodForm = () => {
           period: res.data.id,
         });
       }
-      // Redireccionar igual que en editar
-      if (location.state && location.state.from) {
-        navigate(location.state.from);
+      
+      if (continueAdding) {
+        // Limpiar formulario y mostrar mensaje de éxito
+        setSuccessMessage("Período creado exitosamente");
+        setNombrePeriodo("");
+        setStartDate(null);
+        setEndDate(null);
+        setSelectedDate(null);
+        setReason("");
+        setDaysWithoutClasses([]);
+        setWeeksWithoutClasses([]);
+        setWeekRange({ startDate: null, endDate: null });
+        setWeekReason("");
+        // Scroll al inicio
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
-        navigate("/mapa-horarios");
+        // Redireccionar igual que antes
+        if (location.state && location.state.from) {
+          navigate(location.state.from);
+        } else {
+          navigate("/mapa-horarios");
+        }
       }
     } catch (error) {
       let msg = "Error al guardar el período.";
@@ -265,6 +289,9 @@ export const PeriodForm = () => {
         {/* Mensajes de error generales solo en caso de submitError */}
         {submitError && (
           <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">{submitError}</div>
+        )}
+        {successMessage && (
+          <div className="mb-4 p-3 bg-green-100 text-green-700 rounded">{successMessage}</div>
         )}
 
         {/* Nombre del período */}
@@ -514,14 +541,37 @@ export const PeriodForm = () => {
           )}
         </div>
 
-        {/* Botón para crear período */}
-        <div className="flex justify-end">
+        {/* Botones para crear período */}
+        <div className="flex flex-col sm:flex-row justify-between gap-3">
           <button
-            onClick={handleCrearPeriodo}
-            className="bg-[#006599] hover:bg-[#005080] text-white px-8 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 text-lg font-semibold"
+            type="button"
+            onClick={() => {
+              if (location.state && location.state.from) {
+                navigate(location.state.from);
+              } else {
+                navigate("/mapa-horarios");
+              }
+            }}
+            className="w-full sm:w-auto bg-gray-300 hover:bg-gray-400 text-gray-700 px-6 py-3 rounded-lg transition-all duration-200 text-base sm:text-lg font-semibold order-2 sm:order-1"
           >
-            Crear período
+            Cancelar
           </button>
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 order-1 sm:order-2">
+            <button
+              type="button"
+              onClick={() => handleCrearPeriodo(true)}
+              className="w-full sm:w-auto bg-[#12a6b9] hover:bg-[#0e8a9c] text-white px-4 sm:px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 text-base sm:text-lg font-semibold whitespace-nowrap"
+            >
+              Guardar y Crear Otro
+            </button>
+            <button
+              type="button"
+              onClick={() => handleCrearPeriodo(false)}
+              className="w-full sm:w-auto bg-[#006599] hover:bg-[#005080] text-white px-6 sm:px-8 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 text-base sm:text-lg font-semibold"
+            >
+              Crear período
+            </button>
+          </div>
         </div>
       </div>
     </div>
