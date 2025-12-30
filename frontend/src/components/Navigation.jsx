@@ -58,7 +58,14 @@ export function Navigation() {
               <img
                 src={logo}
                 alt="Logo HorarioUCF"
-                className="h-8 w-8 md:h-10 md:w-10 object-contain bg-white rounded-xl flex-shrink-0"
+                className="h-8 w-8 md:h-10 md:w-10 object-contain bg-white rounded-xl shadow border border-[#006599] flex-shrink-0"
+                style={{
+                  background: "#006599", // Fondo sólido azul institucional
+                  border: "2px solid #006599", // Borde azul para ocultar filos
+                  borderRadius: "0.75rem",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                  padding: "2px",
+                }}
               />
               <h1 className="font-bold text-lg md:text-2xl lg:text-3xl mb-0 text-white tracking-wide select-none truncate">
                 HorarioUCF

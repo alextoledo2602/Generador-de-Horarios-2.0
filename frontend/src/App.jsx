@@ -25,8 +25,6 @@ import { TeachersDetails } from "./components/teachers-details";
 import RegisterForm from "./components/register-form";
 import LoginForm from "./components/login-form"
 import { HomePage } from "./pages/HomePage"
-import { ContactPage } from "./pages/ContactPage"
-import { InfoPage } from "./pages/InfoPage"
 import AdminUsuarios from "./components/AdminUsuarios"
 import { ActivityDetails } from "./components/activity-details";
 import { ActivityForm } from "./components/activity-form";
@@ -65,8 +63,6 @@ function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/inicio" />} />
         <Route path="/inicio" element={<HomePage />} />
-        <Route path="/contacto" element={<ContactPage />} />
-        <Route path="/info" element={<InfoPage />} />
         <Route path="/register" element={<RegisterForm />} />
         <Route path="/login" element={<LoginForm />} />
         {/* Rutas protegidas */}

@@ -11,4 +11,12 @@ export default defineConfig({
   },
   // Asegurar que las variables de entorno se carguen correctamente
   envDir: "./",
+  server: {
+    proxy: {
+      '/tasks/api': {
+        target: 'http://localhost',
+        changeOrigin: true,
+      }
+    }
+  },
 });
