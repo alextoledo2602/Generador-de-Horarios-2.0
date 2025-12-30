@@ -1,0 +1,155 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @page {
+        size: A4 landscape;
+          margin: 1mm 4mm 4mm 4mm;
+      }
+      @media print {s
+        body { margin: 0; background: white; }
+      }
+    </style>
+</head>
+<body>
+  <div>
+        <nav class="grid grid-cols-10 items-center mb-2 bg-transparent w-full h-[46px]">
+            <div class="col-span-1 flex items-center justify-start">
+                <img src="{% static 'img/img.jpg' %}" alt="Logo" class="h-[46px] w-auto object-contain block" />
+            </div>
+            <div class="col-span-1 flex items-center justify-start"></div>
+            <div class="col-span-1 flex items-center justify-start">
+                <span class="font-['Arial'] text-[36px] leading-none">P-4</span>
+            </div>
+            <div class="col-span-3 flex flex-col justify-center pl-2">
+                <span class="font-['Arial_MT'] text-[10pt] leading-tight">Curso: <strong>{{ schedule.course }}</strong></span>
+                <span class="font-['Arial_MT'] text-[10pt] leading-tight">Semestre: <strong>{{ schedule.period }}</strong></span>
+                <span class="font-['Arial_MT'] text-[10pt] leading-tight">Carrera: <strong>{{ schedule.career }}</strong></span>
+            </div>
+            <div class="col-span-4 flex flex-col justify-center pl-4">
+                <span class="font-['Arial_MT'] text-[10pt] leading-tight">Actualizado: <strong>{{ schedule.updated }}</strong></span>
+                                                <div class="flex flex-row gap-x-32">
+                                                    <span class="font-['Arial_MT'] text-[10pt] leading-tight">Grupo: <strong>{{ schedule.group }}</strong></span>
+                                                    <span class="font-['Arial_MT'] text-[10pt] leading-tight">Facultad: <strong>{{ schedule.faculty }}</strong></span>
+                                                </div>
+                                                <div class="flex flex-row gap-x-32">
+                                                    <span class="font-['Arial_MT'] text-[10pt] leading-tight">Periodo: <strong>{{ schedule.period }}</strong></span>
+                                                    <span class="font-['Arial_MT'] text-[10pt] leading-tight">Año: <strong>{{ schedule.year }}</strong></span>
+                                                </div>
+            </div>
+        </nav>
+            <div class="flex flex-col w-full">
+                {# Renderizar grid de 4 filas x 6 columnas = 24 semanas. #}
+                <div class="grid grid-cols-6 ">
+                    {% for week in weeks %}
+                        <div class="p-1">
+                            <p class="underline text-center text-[7.5pt] font-['Arial_MT']"><strong>{{ forloop.counter }}</strong>{% if week.title %}: {{ week.title }}{% endif %}</p>
+                            <table class="table-fixed border-collapse w-full align-top">
+                                <colgroup>
+                                    {% for _ in "012345"|make_list %}
+                                    <col style="width:21pt;">
+                                    {% endfor %}
+                                </colgroup>
+                                {% if forloop.counter <= 6 %}
+                                <thead class="align-top">
+                                    <tr class="align-top">
+                                        <th class="text-[10pt] font-['Arial_MT'] align-top p-0 m-0 border-0">L</th>
+                                        <th class="text-[10pt] font-['Arial_MT'] align-top p-0 m-0 border-0">M</th>
+                                        <th class="text-[10pt] font-['Arial_MT'] align-top p-0 m-0 border-0">M</th>
+                                        <th class="text-[10pt] font-['Arial_MT'] align-top p-0 m-0 border-0">J</th>
+                                        <th class="text-[10pt] font-['Arial_MT'] align-top p-0 m-0 border-0">V</th>
+                                        <th class="text-[10pt] font-['Arial_MT'] align-top p-0 m-0 border-0">S</th>
+                                    </tr>
+                                </thead>
+                                {% endif %}
+                                <tbody>
+                                    {% if week.rows %}
+                                        {% for row in week.rows %}
+                                            <tr>
+                                                {% for cell in row %}
+                                                    <td class="border border-black h-[13pt] w-[21pt] text-[7pt] text-center overflow-hidden">{{ cell }}</td>
+                                                {% endfor %}
+                                            </tr>
+                                        {% endfor %}
+                                    {% else %}
+                                        {% for _ in "012345"|make_list %}
+                                            <tr>
+                                                {% for __ in "012345"|make_list %}
+                                                    <td class="border border-black h-[13pt] w-[21pt]"></td>
+                                                {% endfor %}
+                                            </tr>
+                                        {% endfor %}
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+
+
+    <footer class="w-full flex flex-row mt-1">
+        <!-- Sección izquierda -->
+        <div class="w-1/2 flex justify-start">
+            <table class="w-[90%] border border-black border-collapse font-['ArialMT']">
+                <thead class="align-top">
+                    <tr class="align-top">
+                        <th class="text-[10pt] font-['Arial_MT'] align-top p-0 m-0 border border-black">SIMB</th>
+                        <th class="text-[10pt] font-['Arial_MT'] align-top p-0 m-0 border border-black">ASIGNATURA</th>
+                        <th class="text-[10pt] font-['Arial_MT'] align-top p-0 m-0 border border-black">PROFESOR</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in subjects_activities %}
+                    <tr>
+                        <td class="border border-black h-[10pt] px-2 max-h-[10pt] min-h-[10pt] w-[21pt] text-[8pt] overflow-hidden whitespace-nowrap leading-none">{{ s.subject_symb }}</td>
+                        <td class="border border-black h-[10pt] px-2 max-h-[10pt] min-h-[10pt] w-[21pt] text-[8pt] overflow-hidden whitespace-nowrap leading-none">{{ s.subject_name }}</td>
+                        <td class="border border-black h-[10pt] px-2 max-h-[10pt] min-h-[10pt] w-[21pt] text-[8pt] overflow-hidden whitespace-nowrap leading-none">{{ s.teacher_name }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <!-- Sección derecha dividida en dos mitades -->
+        <div class="w-1/2 flex flex-row">
+            <!-- Mitad izquierda: tabla ACTIVIDAD/SIMB -->
+            <div class="w-1/2 flex justify-start">
+                <table class="w-[90%] border border-black border-collapse text-[10pt] font-['Arial']">
+                    <thead>
+                        <tr>
+                            <th class="border border-black w-[80%] text-left h-4 px-0 py-0">ACTIVIDAD</th>
+                            <th class="border border-black w-[20%] text-left h-4 px-0 py-0">SIMB</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for a in activities_list %}
+                        <tr>
+                            <td class="border border-black h-[10pt] px-2 max-h-[10pt] min-h-[10pt] w-[21pt] text-[8pt] overflow-hidden whitespace-nowrap leading-none">{{ a.activity_name }}</td>
+                            <td class="border border-black h-[10pt] px-2 max-h-[10pt] min-h-[10pt] w-[21pt] text-[8pt] overflow-hidden whitespace-nowrap leading-none">{{ a.symb }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <!-- Mitad derecha vacía para contenido futuro -->
+            <div class="w-1/2 flex items-center justify-center">
+                <div class="w-[90%] h-full flex flex-col justify-between items-start" style="height: 100%;">
+                    <span class="font-['Arial_MT'] text-[10pt]">Aula: <strong>{{ schedule.class_room }}</strong></span>
+                    <span class="font-['Arial_MT'] text-[10pt]">J' Colectivo de año:</span>
+                    <span class="block border-b border-black w-full"></span>
+                    <span class="font-['Arial_MT'] text-[10pt]">Decano:</span>
+                    <span class="block border-b border-black w-full"></span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+  
+</body>
+</html>
